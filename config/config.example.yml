@@ -1,68 +1,77 @@
-# Protocol selection: 'imap' (recommended) or 'activesync'
+# MailCow AI Filter Configuration
+# Local LLM Setup for mail.kekz.org
+
+# Protocol: IMAP (recommended and working on your server)
 protocol: "imap"
 
-# IMAP Configuration (recommended - fully supported)
+# IMAP Configuration
 imap:
-  server: "mail.yourdomain.com"
-  username: "your-email@yourdomain.com"
-  password: "your-password"
+  server: "mail.kekz.org"
+  username: "your-email@kekz.org"  # REPLACE with your actual email
+  password: "your-password"         # REPLACE with your actual password
   use_ssl: true
-  port: 993  # 993 for SSL, 143 for non-SSL
+  port: 993
 
-# ActiveSync Configuration (advanced - requires WBXML implementation)
-activesync:
-  server: "mail.yourdomain.com"
-  username: "your-email@yourdomain.com"
-  password: "your-password"
-  use_ssl: true
-  path: "/Microsoft-Server-ActiveSync"
-  device_id: "mailcow-ai-filter"
-  device_type: "SmartPhone"
-
-# AI Configuration
+# AI Configuration - Local LLM via Ollama
 ai:
-  # Provider: "anthropic" or "ollama"
   provider: "ollama"
 
-  # For Anthropic Claude API
-  api_key: "your-anthropic-api-key"  # Not needed for Ollama
-  model: "claude-sonnet-4-5-20250929"  # Or local model name for Ollama
+  # Current model: Qwen3 14B (fast, high quality)
+  model: "qwen3:14b"
 
-  # For Ollama (local LLMs) - Recommended models:
-  # model: "qwen3:14b"       # Fast, high quality (RECOMMENDED)
-  # model: "llama3.1:70b"    # Larger model for 16GB+ VRAM
-  # model: "deepseek-r1:14b" # Alternative reasoning model
-  # model: "mistral:latest"  # Lighter option
-  base_url: "http://localhost:11434"  # Ollama server URL
+  # Other options:
+  # model: "deepseek-r1:14b"  # Alternative model
+  # model: "llama3.1:70b-instruct-q4_K_M"  # Larger, slower model
 
-  # Two-Tier Hierarchical Mode (recommended for 100+ emails)
+  base_url: "http://localhost:11434"
+
+  # Analysis Modes (priority: embedding > hierarchical > simple)
+  # Embedding mode: ML-based clustering (10-50x faster for 1000+ emails)
+  use_embedding: true  # Enable embedding-based clustering (requires ML dependencies)
+
+  # Two-Tier Hierarchical Mode (recommended for 100+ emails, fallback if embedding disabled)
   # Uses worker model to summarize each email, then master model for pattern analysis
-  use_hierarchical: true  # Enable two-tier architecture (default: true)
+  use_hierarchical: true  # Enable two-tier architecture
 
-  # Worker model: Fast model for email summarization
-  worker_model: "qwen3:4b"  # Recommended: qwen3:4b (256K context, fast)
-  # Alternative worker models:
-  # worker_model: "qwen3:0.6b"  # Fastest (523MB)
-  # worker_model: "qwen3:1.7b"  # Balanced (1.4GB)
-  # worker_model: "qwen3:8b"    # Slower but better quality (5.2GB)
+  # Worker model: Fast model for email summarization (parallel processing)
+  worker_model: "gemma2:2b"  # Google's model with excellent JSON compliance
 
   # Master model: Better model for strategic pattern analysis
-  master_model: "qwen3:14b"  # Recommended: qwen3:14b for hierarchical folders
-  # If master_model not set, falls back to 'model' setting above
+  master_model: "qwen3:14b"  # Master model for creating hierarchical folder structure
 
   # Analysis settings
-  max_emails_to_analyze: 100
-  sample_from_folders: true  # Sample emails from different folders
+  max_emails_to_analyze: 2000  # Analyze up to 2000 emails with embedding clustering
+  max_parallel_workers: 3   # Reduced from 10 to avoid spamming Ollama
+  sample_from_folders: true
+
+  # AI Generation Settings (improved for better categorization)
+  temperature: 0.7        # Increased from 0.5 for more creative categorization
+  num_predict: 10000      # Required for BAAI model's detailed output (was 4000, then 6000)
+  top_p: 0.9              # Nucleus sampling parameter
+
+# Embedding & Clustering Configuration (NEW - improved ML performance)
+embedding:
+  # Embedding model for semantic similarity
+  # Options: "all-MiniLM-L6-v2" (fast, 384-dim), "all-mpnet-base-v2" (balanced, 768-dim), "BAAI/bge-large-en-v1.5" (best quality, 1024-dim)
+  model: "BAAI/bge-large-en-v1.5"  # PRODUCTION: Best quality (12.5% fewer outliers, better hierarchical structure)
+
+clustering:
+  # HDBSCAN clustering parameters
+  min_cluster_size: 5     # Reduced from 8 - minimum emails to form a cluster
+  min_samples: 2          # Reduced from 4 - more flexible clustering
+
+  # Outlier handling
+  handle_outliers: true   # Re-cluster outliers with lower thresholds
+  outlier_min_cluster_size: 3  # Threshold for outlier re-clustering
 
 # Email Analysis
 analysis:
-  # Which folders to analyze (empty = all folders)
-  include_folders: []
   # Folders to skip
   exclude_folders:
     - "Trash"
     - "Spam"
     - "Junk"
+    - "Deleted Items"
 
   # Minimum emails in a category to generate a rule
   min_category_size: 5
@@ -72,17 +81,12 @@ analysis:
 
 # Sieve Rule Generation
 sieve:
-  # Output file for generated rules
   output_file: "/app/output/generated.sieve"
-
-  # Rule preferences
-  create_folders: true  # Generate fileinto rules
-  mark_as_read: false   # Don't auto-mark as read
-
-  # Safety: require manual review before applying
+  create_folders: true
+  mark_as_read: false
   require_review: true
 
 # Logging
 logging:
-  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  level: "DEBUG"  # Changed to DEBUG to see AI response details
   file: "/app/logs/ai-filter.log"

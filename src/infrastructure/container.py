@@ -68,11 +68,19 @@ class Container:
             ai_config = self.config.get('ai', {})
             master_model = ai_config.get('master_model') or ai_config.get('model', 'qwen3:14b')
 
+            # Read AI generation settings
+            temperature = ai_config.get('temperature', 0.7)
+            num_predict = ai_config.get('num_predict', 6000)
+            top_p = ai_config.get('top_p', 0.9)
+
             self._llm_service = OllamaAdapter(
                 model=master_model,
                 base_url=ai_config.get('base_url', 'http://localhost:11434'),
+                temperature=temperature,
+                num_predict=num_predict,
+                top_p=top_p,
             )
-            logger.info(f"Created OllamaAdapter (master model: {master_model})")
+            logger.info(f"Created OllamaAdapter (master model: {master_model}, temp={temperature})")
 
         return self._llm_service
 
@@ -118,10 +126,14 @@ class Container:
                 logger.info("Embedding mode disabled")
                 return None
 
+            # Read embedding model from config
+            embedding_config = self.config.get('embedding', {})
+            model_name = embedding_config.get('model', 'all-MiniLM-L6-v2')
+
             self._embedding_service = SentenceTransformerAdapter(
-                model_name='all-MiniLM-L6-v2'
+                model_name=model_name
             )
-            logger.info("Created SentenceTransformerAdapter (model: all-MiniLM-L6-v2)")
+            logger.info(f"Created SentenceTransformerAdapter (model: {model_name})")
 
         return self._embedding_service
 
@@ -141,11 +153,23 @@ class Container:
                 logger.info("Clustering service disabled")
                 return None
 
+            # Read clustering parameters from config
+            clustering_config = self.config.get('clustering', {})
+            min_cluster_size = clustering_config.get('min_cluster_size', 5)
+            min_samples = clustering_config.get('min_samples', 2)
+            handle_outliers = clustering_config.get('handle_outliers', True)
+            outlier_min_cluster_size = clustering_config.get('outlier_min_cluster_size', 3)
+
             self._clustering_service = HDBSCANClusteringAdapter(
-                min_cluster_size=8,  # Increased for higher quality clusters
-                min_samples=4,       # Increased to reduce noise
+                min_cluster_size=min_cluster_size,
+                min_samples=min_samples,
+                handle_outliers=handle_outliers,
+                outlier_min_cluster_size=outlier_min_cluster_size,
             )
-            logger.info("Created HDBSCANClusteringAdapter")
+            logger.info(
+                f"Created HDBSCANClusteringAdapter (min_cluster_size={min_cluster_size}, "
+                f"min_samples={min_samples}, handle_outliers={handle_outliers})"
+            )
 
         return self._clustering_service
 

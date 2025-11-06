@@ -24,18 +24,27 @@ class OllamaAdapter(ILLMService):
         self,
         model: str = "qwen3:14b",
         base_url: str = "http://localhost:11434",
+        temperature: float = 0.7,
+        num_predict: int = 6000,
+        top_p: float = 0.9,
     ) -> None:
         """Initialize Ollama adapter.
 
         Args:
             model: Ollama model to use
             base_url: Ollama server URL
+            temperature: Sampling temperature (0-1, higher = more creative)
+            num_predict: Maximum tokens to generate
+            top_p: Nucleus sampling parameter
         """
         self.model = model
         self.base_url = base_url
+        self.temperature = temperature
+        self.num_predict = num_predict
+        self.top_p = top_p
         self.session = requests.Session()
 
-        logger.info(f"Initialized Ollama adapter with model {model}")
+        logger.info(f"Initialized Ollama adapter with model {model} (temp={temperature}, max_tokens={num_predict})")
         self._verify_ollama()
 
     def _verify_ollama(self) -> None:
@@ -243,9 +252,9 @@ class OllamaAdapter(ILLMService):
                 "prompt": prompt,
                 "stream": False,
                 "options": {
-                    "temperature": 0.5,    # Increased for more creative categorization
-                    "num_predict": 4000,   # Increased for more detailed output
-                    "top_p": 0.9,
+                    "temperature": self.temperature,
+                    "num_predict": self.num_predict,
+                    "top_p": self.top_p,
                 }
             },
             timeout=600  # 10 minutes for local models
@@ -484,12 +493,18 @@ Cluster {i} ({cluster.size} emails):
 Task:
 Analyze EACH of the {len(clusters)} CLUSTERS individually and create precise Sieve filter rules.
 
-CRITICAL REQUIREMENTS:
-1. Analyze EVERY cluster (all {len(clusters)} clusters) - do not skip any
-2. Each cluster should map to AT LEAST one category/subcategory
-3. Create 10-25 categories total with specific subcategories
-4. Be GRANULAR - don't over-consolidate different email types
-5. Group similar clusters under same parent category but with different subcategories
+CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE EXACTLY:
+1. You MUST analyze ALL {len(clusters)} clusters - do not skip ANY
+2. MINIMUM OUTPUT: Create at least {max(10, min(len(clusters), 25))} subcategories
+3. Each cluster MUST map to AT LEAST one subcategory (preferably its own)
+4. Be GRANULAR and SPECIFIC - create separate subcategories for:
+   - Different sender domains (GitHub vs GitLab vs PayPal vs Amazon)
+   - Different email types from same sender (Orders vs Shipping vs Returns)
+   - Different purposes (Receipts vs Invoices vs Notifications)
+5. DO NOT over-consolidate - if 2 clusters have different senders or purposes, create separate subcategories
+6. Group related subcategories under parent categories (e.g., "Work/GitHub", "Work/GitLab", "Shopping/Amazon-Orders", "Shopping/Amazon-Shipping")
+
+IMPORTANT: If you create fewer than {max(10, min(len(clusters)//2, 25))} subcategories, your response will be REJECTED.
 
 HIERARCHICAL FOLDER STRUCTURE GUIDELINES:
 - Use slash (/) to separate parent/child folders: "Parent/Child"
@@ -524,64 +539,112 @@ CATEGORIZATION STRATEGY:
 4. Set confidence 0.75-1.0 based on pattern specificity
 """
 
-        prompt += """
-Example output:
+        prompt += f"""
+Example output (notice how SPECIFIC and GRANULAR the subcategories are):
 ```json
-{
+{{
   "categories": [
-    {
+    {{
       "name": "Work",
       "description": "Work-related emails",
       "patterns": [],
       "suggested_folder": "Work",
       "confidence": 0.95,
       "subcategories": [
-        {
-          "name": "CI/CD",
-          "description": "Continuous integration and deployment",
-          "patterns": ["from:@github.com", "subject:pipeline,ci,build"],
-          "suggested_folder": "Work/CI-CD",
+        {{
+          "name": "GitHub-Actions",
+          "description": "GitHub CI/CD pipeline notifications",
+          "patterns": ["from:@github.com", "subject:action,workflow,ci"],
+          "suggested_folder": "Work/GitHub-Actions",
           "confidence": 0.95,
-          "example_subjects": ["Pipeline failed", "Build succeeded"]
-        },
-        {
-          "name": "Code Reviews",
-          "description": "Pull requests and code reviews",
-          "patterns": ["from:@github.com", "subject:pull request,PR"],
-          "suggested_folder": "Work/Code-Reviews",
+          "example_subjects": ["Workflow failed", "CI passed"]
+        }},
+        {{
+          "name": "GitHub-PRs",
+          "description": "GitHub pull requests",
+          "patterns": ["from:@github.com", "subject:pull request,PR,review"],
+          "suggested_folder": "Work/GitHub-PRs",
           "confidence": 0.9,
           "example_subjects": ["New PR", "Review requested"]
-        }
+        }},
+        {{
+          "name": "GitLab-MR",
+          "description": "GitLab merge requests",
+          "patterns": ["from:@gitlab.com", "subject:merge request,MR"],
+          "suggested_folder": "Work/GitLab-MR",
+          "confidence": 0.9,
+          "example_subjects": ["Merge request assigned"]
+        }}
       ]
-    },
-    {
+    }},
+    {{
       "name": "Shopping",
-      "description": "Online shopping and deliveries",
+      "description": "Online shopping",
       "patterns": [],
       "suggested_folder": "Shopping",
       "confidence": 0.9,
       "subcategories": [
-        {
-          "name": "Orders",
-          "description": "Order confirmations",
-          "patterns": ["subject:order,bestellt,confirmed"],
-          "suggested_folder": "Shopping/Orders",
+        {{
+          "name": "Amazon-Orders",
+          "description": "Amazon order confirmations",
+          "patterns": ["from:@amazon.de", "subject:bestellt,order"],
+          "suggested_folder": "Shopping/Amazon-Orders",
+          "confidence": 0.95,
+          "example_subjects": ["Bestellung bestaetigt"]
+        }},
+        {{
+          "name": "Amazon-Shipping",
+          "description": "Amazon shipping updates",
+          "patterns": ["from:@amazon.de", "subject:versendet,shipped"],
+          "suggested_folder": "Shopping/Amazon-Shipping",
           "confidence": 0.9,
-          "example_subjects": ["Order confirmed", "Bestellung"]
-        },
-        {
-          "name": "Shipping",
-          "description": "Shipping and delivery updates",
-          "patterns": ["subject:shipped,versendet,delivery"],
-          "suggested_folder": "Shopping/Shipping",
+          "example_subjects": ["Paket wurde versendet"]
+        }},
+        {{
+          "name": "eBay-Activity",
+          "description": "eBay notifications",
+          "patterns": ["from:@ebay.de", "subject:gebot,bid,won"],
+          "suggested_folder": "Shopping/eBay-Activity",
           "confidence": 0.85,
-          "example_subjects": ["Shipped", "Out for delivery"]
-        }
+          "example_subjects": ["You won the auction"]
+        }}
       ]
-    }
+    }},
+    {{
+      "name": "Finance",
+      "description": "Financial transactions",
+      "patterns": [],
+      "suggested_folder": "Finance",
+      "confidence": 0.95,
+      "subcategories": [
+        {{
+          "name": "PayPal-Receipts",
+          "description": "PayPal payment receipts",
+          "patterns": ["from:@paypal.com", "subject:receipt,zahlung"],
+          "suggested_folder": "Finance/PayPal-Receipts",
+          "confidence": 0.95,
+          "example_subjects": ["Receipt for payment"]
+        }},
+        {{
+          "name": "Stripe-Invoices",
+          "description": "Stripe invoices",
+          "patterns": ["from:@stripe.com", "subject:invoice,rechnung"],
+          "suggested_folder": "Finance/Stripe-Invoices",
+          "confidence": 0.9,
+          "example_subjects": ["Invoice for subscription"]
+        }}
+      ]
+    }}
   ]
-}
+}}
 ```
+
+NOTICE in the example:
+- GitHub is split into "GitHub-Actions" and "GitHub-PRs" (GRANULAR)
+- Amazon is split into "Amazon-Orders" and "Amazon-Shipping" (SPECIFIC)
+- Each subcategory has a unique sender+purpose combination
+- Parent categories group related services, subcategories distinguish types
+- Total subcategories in example: 7 (and you should create {max(10, min(len(clusters), 25))})
 
 IMPORTANT:
 - Return ONLY the JSON output

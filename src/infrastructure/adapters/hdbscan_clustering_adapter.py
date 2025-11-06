@@ -24,18 +24,29 @@ class HDBSCANClusteringAdapter(IClusteringService):
     automatically determines the number of clusters and handles outliers well.
     """
 
-    def __init__(self, min_cluster_size: int = 5, min_samples: int = 3):
+    def __init__(
+        self,
+        min_cluster_size: int = 5,
+        min_samples: int = 3,
+        handle_outliers: bool = True,
+        outlier_min_cluster_size: int = 3,
+    ):
         """Initialize HDBSCAN clusterer.
 
         Args:
             min_cluster_size: Minimum number of emails to form a cluster
             min_samples: Minimum samples in neighborhood for core points
+            handle_outliers: Whether to re-cluster outliers with lower thresholds
+            outlier_min_cluster_size: Minimum cluster size for outlier re-clustering
         """
         self.min_cluster_size = min_cluster_size
         self.min_samples = min_samples
+        self.handle_outliers = handle_outliers
+        self.outlier_min_cluster_size = outlier_min_cluster_size
         logger.info(
             f"Initialized HDBSCAN clustering "
-            f"(min_cluster_size={min_cluster_size}, min_samples={min_samples})"
+            f"(min_cluster_size={min_cluster_size}, min_samples={min_samples}, "
+            f"handle_outliers={handle_outliers})"
         )
 
     def cluster_emails(
@@ -124,6 +135,29 @@ class HDBSCANClusteringAdapter(IClusteringService):
                 f"representatives: {centroid_indices[:3]}"
             )
 
+        # Handle outliers by re-clustering with lower thresholds
+        if self.handle_outliers and n_noise >= self.outlier_min_cluster_size:
+            logger.info(f"Re-clustering {n_noise} outliers with lower thresholds...")
+
+            # Get outlier indices
+            outlier_indices = np.where(cluster_labels == -1)[0]
+            outlier_emails = [emails[i] for i in outlier_indices]
+            outlier_embeddings = embeddings[outlier_indices]
+
+            # Re-cluster with more lenient parameters
+            outlier_clusters = self._recluster_outliers(
+                outlier_emails,
+                outlier_embeddings,
+                next_cluster_id=len(unique_labels),
+            )
+
+            if outlier_clusters:
+                clusters.extend(outlier_clusters)
+                logger.info(
+                    f"Re-clustering created {len(outlier_clusters)} additional clusters "
+                    f"from {sum(c.size for c in outlier_clusters)} outliers"
+                )
+
         return clusters
 
     def find_representative_indices(
@@ -159,3 +193,71 @@ class HDBSCANClusteringAdapter(IClusteringService):
         representative_indices = np.argsort(distances)[:n_representatives]
 
         return representative_indices.tolist()
+
+    def _recluster_outliers(
+        self,
+        outlier_emails: Sequence[Email],
+        outlier_embeddings: NDArray[np.float32],
+        next_cluster_id: int,
+    ) -> list[EmailCluster]:
+        """Re-cluster outliers with more lenient parameters.
+
+        Args:
+            outlier_emails: Emails marked as outliers
+            outlier_embeddings: Embeddings for outlier emails
+            next_cluster_id: Starting cluster ID for new clusters
+
+        Returns:
+            List of EmailCluster objects created from outliers
+        """
+        if len(outlier_emails) < self.outlier_min_cluster_size:
+            return []
+
+        # Use more lenient parameters for outlier re-clustering
+        clusterer = hdbscan.HDBSCAN(
+            min_cluster_size=self.outlier_min_cluster_size,
+            min_samples=max(1, self.min_samples - 1),  # Lower min_samples
+            metric='euclidean',
+            cluster_selection_method='leaf',  # More lenient selection method
+            prediction_data=True,
+        )
+
+        # Perform clustering on outliers
+        outlier_labels = clusterer.fit_predict(outlier_embeddings)
+
+        # Count new clusters (excluding noise label -1)
+        unique_outlier_labels = set(outlier_labels)
+        unique_outlier_labels.discard(-1)
+
+        if not unique_outlier_labels:
+            logger.info("Re-clustering did not create any new clusters")
+            return []
+
+        # Build EmailCluster objects from re-clustered outliers
+        new_clusters = []
+        for outlier_cluster_id in sorted(unique_outlier_labels):
+            # Get indices of emails in this outlier cluster
+            cluster_indices = np.where(outlier_labels == outlier_cluster_id)[0]
+            cluster_emails = [outlier_emails[i] for i in cluster_indices]
+            cluster_embeddings = outlier_embeddings[cluster_indices]
+
+            # Find representative emails
+            centroid_indices = self.find_representative_indices(
+                cluster_emails,
+                cluster_embeddings,
+                n_representatives=min(3, len(cluster_emails)),
+            )
+
+            # Create cluster with adjusted ID
+            email_cluster = EmailCluster.create(
+                cluster_id=next_cluster_id + int(outlier_cluster_id),
+                emails=cluster_emails,
+                centroid_indices=centroid_indices,
+            )
+            new_clusters.append(email_cluster)
+
+            logger.debug(
+                f"Outlier cluster {next_cluster_id + outlier_cluster_id}: {len(cluster_emails)} emails"
+            )
+
+        return new_clusters
