@@ -50,7 +50,7 @@ ai:
   model: "claude-sonnet-4-5-20250929"
 ```
 
-**Option B: Using Local LLM (FREE, requires GPU)**
+**Option B: Using Local LLM (FREE, requires GPU) ⭐ RECOMMENDED**
 ```yaml
 protocol: "imap"
 
@@ -63,7 +63,7 @@ imap:
 
 ai:
   provider: "ollama"
-  model: "llama3.1:70b-instruct-q4_K_M"
+  master_model: "qwen2.5-coder:14b"  # WINNER: 11% faster, 19% more rules
   base_url: "http://localhost:11434"
 ```
 

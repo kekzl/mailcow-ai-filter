@@ -2,6 +2,22 @@
 
 Run AI email analysis completely offline using your own GPU! No API costs, full privacy, unlimited usage.
 
+## 🏆 Recommended Model (Tested 2025-11-06)
+
+**Winner: qwen2.5-coder:14b**
+
+Based on comprehensive testing of 3 models on 1,568 emails:
+- ✅ **11% faster** than qwen3:14b baseline (532s vs 597s)
+- ✅ **19% more Sieve rules** generated (31 vs 26)
+- ✅ **10x better categorization** (10 parent categories vs 1)
+- ✅ Optimized for structured code output (Sieve filters)
+
+```bash
+ollama pull qwen2.5-coder:14b
+```
+
+See [model_comparison_results/COMPARISON_REPORT.md](model_comparison_results/COMPARISON_REPORT.md) for full details.
+
 ## Your Hardware: Perfect for Local AI
 
 **Your specs:**

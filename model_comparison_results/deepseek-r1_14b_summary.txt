@@ -1,0 +1,6 @@
+Model: deepseek-r1:14b
+Duration: 524s
+Categories: |
+Rules: 
+Output: deepseek-r1_14b_rules.sieve
+Log: deepseek-r1_14b_output.log

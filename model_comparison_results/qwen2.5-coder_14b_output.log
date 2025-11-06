@@ -1,0 +1,91 @@
+Attaching to mailcow-ai-filter
+mailcow-ai-filter  | ============================================================
+mailcow-ai-filter  | MailCow AI Filter - Email Sorting with AI-Generated Sieve Rules
+mailcow-ai-filter  | ============================================================
+mailcow-ai-filter  | 
+mailcow-ai-filter  | INFO: Logging to file: /app/logs/ai-filter.log
+mailcow-ai-filter  | INFO: Starting MailCow AI Filter (Hexagonal Architecture)
+mailcow-ai-filter  | Protocol: IMAP
+mailcow-ai-filter  | 
+mailcow-ai-filter  | INFO: Initialized dependency injection container
+mailcow-ai-filter  | INFO: Dependency injection container initialized
+mailcow-ai-filter  | INFO: Initialized OllamaEmailSummarizer with worker model gemma2:2b
+mailcow-ai-filter  | INFO: Created OllamaEmailSummarizer (worker model: gemma2:2b)
+mailcow-ai-filter  | INFO: Loading sentence transformer model: BAAI/bge-large-en-v1.5
+mailcow-ai-filter  | INFO: Use pytorch device_name: cpu
+mailcow-ai-filter  | INFO: Load pretrained SentenceTransformer: BAAI/bge-large-en-v1.5
+mailcow-ai-filter  | INFO: Loaded model BAAI/bge-large-en-v1.5 (embedding_dim=1024)
+mailcow-ai-filter  | INFO: Created SentenceTransformerAdapter (model: BAAI/bge-large-en-v1.5)
+mailcow-ai-filter  | INFO: Initialized HDBSCAN clustering (min_cluster_size=5, min_samples=2, handle_outliers=True)
+mailcow-ai-filter  | INFO: Created HDBSCANClusteringAdapter (min_cluster_size=5, min_samples=2, handle_outliers=True)
+mailcow-ai-filter  | INFO: Initialized IMAP adapter for mail.kekz.org
+mailcow-ai-filter  | INFO: Created IMAPAdapter instance
+mailcow-ai-filter  | INFO: Initialized Ollama adapter with model qwen2.5-coder:14b (temp=0.7, max_tokens=10000)
+mailcow-ai-filter  | INFO: Created OllamaAdapter (master model: qwen2.5-coder:14b, temp=0.7)
+mailcow-ai-filter  | INFO: Initialized Sieve file adapter (output_dir: /app/output)
+mailcow-ai-filter  | INFO: Created SieveFileAdapter instance
+mailcow-ai-filter  | INFO: Created FilterGenerator instance
+mailcow-ai-filter  | INFO: Created AnalyzeEmailsUseCase instance (embedding mode)
+mailcow-ai-filter  | INFO: Starting analysis: max_emails=2000, exclude_folders=['Trash', 'Spam', 'Junk', 'Deleted Items']
+mailcow-ai-filter  | Fetching and analyzing emails...
+mailcow-ai-filter  | 
+mailcow-ai-filter  | INFO: Starting email analysis: max_emails=2000, exclude_folders=['Trash', 'Spam', 'Junk', 'Deleted Items']
+mailcow-ai-filter  | INFO: Fetching existing folder structure from server...
+mailcow-ai-filter  | INFO: Connected to IMAP server mail.kekz.org
+mailcow-ai-filter  | INFO: Found 36 folders
+mailcow-ai-filter  | INFO: Found 36 existing folders
+mailcow-ai-filter  | INFO: Fetching emails from server...
+mailcow-ai-filter  | INFO: Fetching emails from folder 'INBOX'...
+mailcow-ai-filter  | WARNING: Invalid email address: noreply@qsignal.de (Balu), skipping
+mailcow-ai-filter  | WARNING: Invalid email address: noreply@qsignal.de (Balu), skipping
+mailcow-ai-filter  | WARNING: Error fetching email b'992': Invalid email address: "Friedmann
+mailcow-ai-filter  | WARNING: Error fetching email b'991': Invalid email address: "Friedmann
+mailcow-ai-filter  | INFO: Fetched 1568 emails from INBOX
+mailcow-ai-filter  | INFO: Fetched 1568 emails
+mailcow-ai-filter  | INFO: Using embedding-based clustering mode
+mailcow-ai-filter  | INFO: Generating embeddings for 1568 emails...
+mailcow-ai-filter  | INFO: Encoding 1568 emails to embeddings...
+mailcow-ai-filter  | Batches:   0%|          | 0/49 [00:00<?, ?it/s]Batches:   2%|▏         | 1/49 [00:09<07:37,  9.54s/it]Batches:   4%|▍         | 2/49 [00:20<07:54, 10.10s/it]Batches:   6%|▌         | 3/49 [00:29<07:24,  9.67s/it]Batches:   8%|▊         | 4/49 [00:38<07:16,  9.70s/it]Batches:  10%|█         | 5/49 [00:47<06:47,  9.27s/it]Batches:  12%|█▏        | 6/49 [00:55<06:25,  8.96s/it]Batches:  14%|█▍        | 7/49 [01:05<06:20,  9.07s/it]Batches:  16%|█▋        | 8/49 [01:14<06:18,  9.23s/it]Batches:  18%|█▊        | 9/49 [01:23<06:07,  9.19s/it]Batches:  20%|██        | 10/49 [01:33<06:02,  9.28s/it]Batches:  22%|██▏       | 11/49 [01:41<05:46,  9.11s/it]Batches:  24%|██▍       | 12/49 [01:51<05:42,  9.25s/it]Batches:  27%|██▋       | 13/49 [01:59<05:18,  8.85s/it]Batches:  29%|██▊       | 14/49 [02:07<05:01,  8.60s/it]Batches:  31%|███       | 15/49 [02:15<04:45,  8.39s/it]Batches:  33%|███▎      | 16/49 [02:27<05:17,  9.63s/it]Batches:  35%|███▍      | 17/49 [02:38<05:13,  9.80s/it]Batches:  37%|███▋      | 18/49 [02:48<05:06,  9.90s/it]Batches:  39%|███▉      | 19/49 [02:57<04:54,  9.83s/it]Batches:  41%|████      | 20/49 [03:10<05:12, 10.76s/it]Batches:  43%|████▎     | 21/49 [03:23<05:15, 11.28s/it]Batches:  45%|████▍     | 22/49 [03:32<04:47, 10.66s/it]Batches:  47%|████▋     | 23/49 [03:42<04:34, 10.57s/it]Batches:  49%|████▉     | 24/49 [03:52<04:16, 10.26s/it]Batches:  51%|█████     | 25/49 [04:02<04:02, 10.09s/it]Batches:  53%|█████▎    | 26/49 [04:12<03:56, 10.27s/it]Batches:  55%|█████▌    | 27/49 [04:22<03:45, 10.23s/it]Batches:  57%|█████▋    | 28/49 [04:33<03:34, 10.22s/it]Batches:  59%|█████▉    | 29/49 [04:40<03:09,  9.49s/it]Batches:  61%|██████    | 30/49 [04:50<03:02,  9.58s/it]Batches:  63%|██████▎   | 31/49 [05:00<02:52,  9.58s/it]Batches:  65%|██████▌   | 32/49 [05:09<02:41,  9.51s/it]Batches:  67%|██████▋   | 33/49 [05:19<02:34,  9.66s/it]Batches:  69%|██████▉   | 34/49 [05:31<02:33, 10.20s/it]Batches:  71%|███████▏  | 35/49 [05:40<02:20, 10.04s/it]Batches:  73%|███████▎  | 36/49 [05:50<02:08,  9.89s/it]Batches:  76%|███████▌  | 37/49 [05:59<01:56,  9.68s/it]Batches:  78%|███████▊  | 38/49 [06:07<01:41,  9.21s/it]Batches:  80%|███████▉  | 39/49 [06:15<01:27,  8.78s/it]Batches:  82%|████████▏ | 40/49 [06:23<01:18,  8.69s/it]Batches:  84%|████████▎ | 41/49 [06:29<01:01,  7.63s/it]Batches:  86%|████████▌ | 42/49 [06:34<00:48,  6.89s/it]Batches:  88%|████████▊ | 43/49 [06:38<00:37,  6.24s/it]Batches:  90%|████████▉ | 44/49 [06:44<00:30,  6.18s/it]Batches:  92%|█████████▏| 45/49 [06:47<00:19,  4.96s/it]Batches:  94%|█████████▍| 46/49 [06:48<00:11,  3.91s/it]Batches:  96%|█████████▌| 47/49 [06:49<00:06,  3.09s/it]Batches:  98%|█████████▊| 48/49 [06:50<00:02,  2.42s/it]Batches: 100%|██████████| 49/49 [06:51<00:00,  1.94s/it]Batches: 100%|██████████| 49/49 [06:51<00:00,  8.40s/it]
+mailcow-ai-filter  | INFO: Generated embeddings with shape (1568, 1024)
+mailcow-ai-filter  | INFO: Generated embeddings with shape (1568, 1024)
+mailcow-ai-filter  | INFO: Clustering emails based on embeddings...
+mailcow-ai-filter  | INFO: Clustering 1568 emails...
+mailcow-ai-filter  | /usr/local/lib/python3.11/site-packages/sklearn/utils/deprecation.py:132: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+mailcow-ai-filter  |   warnings.warn(
+mailcow-ai-filter  | /usr/local/lib/python3.11/site-packages/sklearn/utils/deprecation.py:132: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+mailcow-ai-filter  |   warnings.warn(
+mailcow-ai-filter  | INFO: Found 95 clusters, 569 outliers (outlier rate: 36.3%)
+mailcow-ai-filter  | INFO: Re-clustering 569 outliers with lower thresholds...
+mailcow-ai-filter  | /usr/local/lib/python3.11/site-packages/sklearn/utils/deprecation.py:132: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+mailcow-ai-filter  |   warnings.warn(
+mailcow-ai-filter  | /usr/local/lib/python3.11/site-packages/sklearn/utils/deprecation.py:132: FutureWarning: 'force_all_finite' was renamed to 'ensure_all_finite' in 1.6 and will be removed in 1.8.
+mailcow-ai-filter  |   warnings.warn(
+mailcow-ai-filter  | INFO: Re-clustering created 83 additional clusters from 341 outliers
+mailcow-ai-filter  | INFO: Found 178 clusters
+mailcow-ai-filter  | INFO: Labeling clusters with master model...
+mailcow-ai-filter  | INFO: Analyzing 178 email clusters with master model (qwen2.5-coder:14b)...
+mailcow-ai-filter  | INFO: Calling Ollama with model qwen2.5-coder:14b...
+mailcow-ai-filter  | INFO: Master model identified 10 categories
+mailcow-ai-filter  | INFO: Generating Sieve filter from patterns...
+mailcow-ai-filter  | INFO: Generated filter with 31 rules
+mailcow-ai-filter  | INFO: Disconnected from IMAP server
+mailcow-ai-filter  | INFO: Email analysis completed in 527.37s
+mailcow-ai-filter  | INFO: Saved Sieve filter to /app/output/generated.sieve
+mailcow-ai-filter  | INFO: Generated 31 rules
+mailcow-ai-filter  | 
+mailcow-ai-filter  | ============================================================
+mailcow-ai-filter  | Analysis Complete!
+mailcow-ai-filter  | ============================================================
+mailcow-ai-filter  | 
+mailcow-ai-filter  | Analyzed: 1568 emails
+mailcow-ai-filter  | Identified: 31 categories
+mailcow-ai-filter  | Generated: /app/output/generated.sieve
+mailcow-ai-filter  | Time: 527.35s
+mailcow-ai-filter  | 
+mailcow-ai-filter  | Next steps:
+mailcow-ai-filter  | 1. Review the generated rules in /app/output/generated.sieve
+mailcow-ai-filter  | 2. Test with a small subset of emails
+mailcow-ai-filter  | 3. Upload to MailCow: Mailbox → Edit → Sieve filters
+mailcow-ai-filter  | 
+mailcow-ai-filter  | INFO: MailCow AI Filter completed successfully
+[Kmailcow-ai-filter exited with code 0

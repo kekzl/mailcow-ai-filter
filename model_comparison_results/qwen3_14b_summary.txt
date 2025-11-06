@@ -1,0 +1,6 @@
+Model: qwen3:14b
+Duration: 597s
+Categories: 
+Rules: 
+Output: qwen3_14b_rules.sieve
+Log: qwen3_14b_output.log

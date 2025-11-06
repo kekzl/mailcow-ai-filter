@@ -1,0 +1,6 @@
+Model: qwen2.5-coder:14b
+Duration: 532s
+Categories: |
+Rules: 
+Output: qwen2.5-coder_14b_rules.sieve
+Log: qwen2.5-coder_14b_output.log
