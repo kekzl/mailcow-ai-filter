@@ -6,9 +6,9 @@ protocol: "imap"
 
 # IMAP Configuration
 imap:
-  server: "mail.kekz.org"
-  username: "your-email@kekz.org"  # REPLACE with your actual email
-  password: "your-password"         # REPLACE with your actual password
+  server: "mail.example.com"
+  username: "your-email@example.com"  # REPLACE with your actual email
+  password: "your-password"            # REPLACE with your actual password
   use_ssl: true
   port: 993
 
