@@ -21,6 +21,7 @@ COPY config/ ./config/
 COPY fetch_existing_filters.py .
 COPY create_folders.py .
 COPY upload_filter_api.py .
+COPY apply_filters_retroactive.py .
 
 # Create output directory for generated rules
 RUN mkdir -p /app/output

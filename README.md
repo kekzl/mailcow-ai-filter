@@ -39,13 +39,24 @@ This tool connects to your MailCow mailbox, analyzes your emails using AI, and a
 
 ### What About Existing Emails?
 
-Sieve filters only apply to **new incoming emails**. To organize existing emails:
+Sieve filters only apply to **new incoming emails**. However, this tool includes a **retroactive filter application** feature!
 
+**Option 1: Use Built-in Retroactive Filter (Recommended)**
+```bash
+./mailcow-filter.sh apply-retroactive
+```
+
+This will:
+- Read your generated Sieve filter
+- Scan all emails in your INBOX
+- Move matching emails to their target folders
+- First runs a DRY RUN to show what would happen
+- Then asks for confirmation before moving emails
+
+**Option 2: Manual Methods**
 1. **Use your email client** (Thunderbird, Webmail) to manually move emails
 2. **Apply filters retroactively** using Thunderbird's "Run Filters on Folder" feature
 3. **Use IMAP client** that supports filter application to existing messages
-
-The AI analysis uses your existing emails to learn patterns, but the generated filters only affect future emails.
 
 ---
 
@@ -371,10 +382,11 @@ mailcow-ai-filter/
 
 ### Main Operations
 ```bash
-./mailcow-filter.sh analyze          # Analyze & generate filter
-./mailcow-filter.sh fetch-filters    # Fetch existing filters
-./mailcow-filter.sh create-folders   # Create mail folders
-./mailcow-filter.sh upload-filter    # Upload to MailCow
+./mailcow-filter.sh analyze            # Analyze & generate filter
+./mailcow-filter.sh fetch-filters      # Fetch existing filters
+./mailcow-filter.sh create-folders     # Create mail folders
+./mailcow-filter.sh upload-filter      # Upload to MailCow
+./mailcow-filter.sh apply-retroactive  # Apply filters to existing emails
 ```
 
 ### Utilities
@@ -453,14 +465,27 @@ The AI automatically detects and integrates with your existing filters! It won't
 
 ### Do the filters work on existing emails?
 
-**No**, Sieve filters only apply to **new incoming emails**. The tool analyzes your existing emails to learn patterns, but the generated filters only affect future emails.
+**Sieve filters don't**, but **this tool includes retroactive application!**
 
-**To organize existing emails:**
-- Use Thunderbird's "Run Filters on Folder" feature
-- Manually move emails using your email client
-- Use an IMAP client that supports retroactive filter application
+```bash
+./mailcow-filter.sh apply-retroactive
+```
 
-**Why it works this way:** This is standard Sieve behavior - filters are processing rules for incoming mail, not reorganization tools.
+This feature:
+- ✅ Reads your generated Sieve filter
+- ✅ Applies it to all emails in INBOX
+- ✅ Moves matching emails to target folders
+- ✅ Shows dry run first for safety
+- ✅ Asks for confirmation before moving
+
+**How it works:**
+1. Parses your `generated.sieve` file
+2. Connects to IMAP
+3. Scans each email in INBOX
+4. Matches against filter conditions
+5. Moves emails to appropriate folders
+
+**Note:** Standard Sieve filters (on the server) only process new incoming mail. This tool provides client-side retroactive application via IMAP.
 
 ---
 

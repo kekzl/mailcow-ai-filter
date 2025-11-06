@@ -191,6 +191,36 @@ upload_filter() {
         python upload_filter_api.py
 }
 
+apply_filters_retroactive() {
+    print_header "Apply Filters to Existing Emails"
+    check_container
+
+    if [ ! -f "output/generated.sieve" ]; then
+        print_error "No generated filter found"
+        echo "Run '$0 analyze' first"
+        return 1
+    fi
+
+    print_info "This will apply your generated filters to existing emails in INBOX"
+    echo ""
+    print_warning "This modifies your existing emails!"
+    echo "The script will:"
+    echo "  1. Read your generated filter rules"
+    echo "  2. Scan emails in INBOX"
+    echo "  3. Move matching emails to their target folders"
+    echo "  4. First run a DRY RUN to show what would happen"
+    echo ""
+
+    # Run interactively with TTY
+    docker run --rm -it \
+        -v "$SCRIPT_DIR/config:/app/config:ro" \
+        -v "$SCRIPT_DIR/output:/app/output:ro" \
+        -v "$SCRIPT_DIR/.env:/app/.env:ro" \
+        --network host \
+        "$IMAGE_NAME" \
+        python apply_filters_retroactive.py
+}
+
 view_filter() {
     print_header "View Generated Filter"
 
@@ -239,12 +269,13 @@ show_menu() {
     echo "  2) Fetch existing Sieve filters"
     echo "  3) Create mail folders (IMAP)"
     echo "  4) Upload filter to MailCow (API)"
+    echo "  5) Apply filters to existing emails (retroactive)"
     echo ""
     echo "Utilities:"
-    echo "  5) View generated filter"
-    echo "  6) View logs (tail -f)"
-    echo "  7) Build/rebuild container"
-    echo "  8) Clean up containers"
+    echo "  6) View generated filter"
+    echo "  7) View logs (tail -f)"
+    echo "  8) Build/rebuild container"
+    echo "  9) Clean up containers"
     echo ""
     echo "  0) Exit"
     echo ""
@@ -255,10 +286,11 @@ show_menu() {
         2) fetch_existing_filters ;;
         3) create_folders ;;
         4) upload_filter ;;
-        5) view_filter ;;
-        6) view_logs ;;
-        7) build_container ;;
-        8) clean_containers ;;
+        5) apply_filters_retroactive ;;
+        6) view_filter ;;
+        7) view_logs ;;
+        8) build_container ;;
+        9) clean_containers ;;
         0) exit 0 ;;
         *) print_error "Invalid option" ;;
     esac
@@ -283,6 +315,7 @@ COMMANDS:
     fetch-filters        Fetch existing Sieve filters from server
     create-folders       Create mail folders via IMAP
     upload-filter        Upload filter to MailCow via API
+    apply-retroactive    Apply filters to existing emails in INBOX
 
     view-filter          View generated Sieve filter
     logs                 View logs (tail -f)
@@ -358,6 +391,9 @@ main() {
             ;;
         upload-filter|upload)
             upload_filter
+            ;;
+        apply-retroactive|retroactive|apply)
+            apply_filters_retroactive
             ;;
         view-filter|view)
             view_filter
