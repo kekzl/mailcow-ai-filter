@@ -171,7 +171,7 @@ class SieveFilterExtractor:
         if not script_content:
             return filters
 
-        lines = script_content.split('\n')
+        lines = script_content.split("\n")
         current_rule = None
         current_description = ""
 
@@ -179,9 +179,9 @@ class SieveFilterExtractor:
             line = line.strip()
 
             # Extract comments as descriptions
-            if line.startswith('#'):
+            if line.startswith("#"):
                 comment = line[1:].strip()
-                if comment and not comment.startswith('='):
+                if comment and not comment.startswith("="):
                     # Skip separator lines
                     if current_description:
                         current_description += " " + comment
@@ -189,22 +189,19 @@ class SieveFilterExtractor:
                         current_description = comment
 
             # Detect rule start (if anyof/allof)
-            elif 'if ' in line.lower():
+            elif "if " in line.lower():
                 if current_rule:
                     filters.append(current_rule)
-                current_rule = {
-                    'description': current_description,
-                    'rule': line
-                }
+                current_rule = {"description": current_description, "rule": line}
                 current_description = ""
 
             # Continuation of rule
             elif current_rule and line:
-                current_rule['rule'] += ' ' + line
+                current_rule["rule"] += " " + line
 
             # Rule end
-            elif current_rule and '}' in line:
-                current_rule['rule'] += ' ' + line
+            elif current_rule and "}" in line:
+                current_rule["rule"] += " " + line
                 filters.append(current_rule)
                 current_rule = None
 
@@ -231,13 +228,14 @@ class SieveFilterExtractor:
         summary = f"Found {len(filters)} existing Sieve filter rules:\n\n"
 
         for i, filter_rule in enumerate(filters, 1):
-            desc = filter_rule.get('description', 'No description')
-            rule = filter_rule.get('rule', '')
+            desc = filter_rule.get("description", "No description")
+            rule = filter_rule.get("rule", "")
 
             # Try to extract folder destination
             folder = "unknown"
-            if 'fileinto' in rule:
+            if "fileinto" in rule:
                 import re
+
                 match = re.search(r'fileinto\s+"([^"]+)"', rule)
                 if match:
                     folder = match.group(1)

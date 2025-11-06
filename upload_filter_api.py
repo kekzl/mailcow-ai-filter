@@ -6,7 +6,6 @@ This script uploads the generated Sieve filter to your MailCow server
 using the MailCow REST API.
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -23,8 +22,8 @@ def load_config():
     try:
         import yaml
 
-        config_file = Path(__file__).parent / 'config' / 'config.yml'
-        with open(config_file, 'r') as f:
+        config_file = Path(__file__).parent / "config" / "config.yml"
+        with open(config_file, "r") as f:
             config = yaml.safe_load(f)
 
         return config
@@ -40,7 +39,7 @@ def upload_filter(
     script_data: str,
     filter_type: str = "prefilter",
     active: bool = True,
-    verify_ssl: bool = True
+    verify_ssl: bool = True,
 ):
     """Upload Sieve filter via MailCow API.
 
@@ -58,42 +57,33 @@ def upload_filter(
     """
     url = f"{mailcow_url}/api/v1/add/filter"
 
-    headers = {
-        'X-API-Key': api_key,
-        'Content-Type': 'application/json'
-    }
+    headers = {"X-API-Key": api_key, "Content-Type": "application/json"}
 
     payload = {
         "username": username,
         "filter_type": filter_type,
         "script_desc": "AI-Generated Email Filter",
         "script_data": script_data,
-        "active": "1" if active else "0"
+        "active": "1" if active else "0",
     }
 
     try:
         print(f"📡 Uploading filter to {mailcow_url}...")
-        response = requests.post(
-            url,
-            headers=headers,
-            json=payload,
-            verify=verify_ssl,
-            timeout=30
-        )
+        response = requests.post(url, headers=headers, json=payload, verify=verify_ssl, timeout=30)
 
         if response.status_code == 200:
             result = response.json()
             if isinstance(result, list) and len(result) > 0:
                 # MailCow API typically returns array with result objects
                 first_result = result[0]
-                if first_result.get('type') == 'success':
+                if first_result.get("type") == "success":
                     print(f"✅ {first_result.get('msg', 'Filter uploaded successfully!')}")
                     return True
                 else:
                     print(f"❌ Error: {first_result.get('msg', 'Unknown error')}")
                     return False
             else:
-                print(f"✅ Filter uploaded successfully!")
+                print("✅ Filter uploaded successfully!")
                 return True
         else:
             print(f"❌ HTTP Error {response.status_code}: {response.text}")
@@ -115,44 +105,32 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description='Upload Sieve filter to MailCow via API'
+    parser = argparse.ArgumentParser(description="Upload Sieve filter to MailCow via API")
+    parser.add_argument(
+        "--mailcow-url",
+        help="MailCow URL (e.g., https://mail.example.com)",
+        default=None,
+    )
+    parser.add_argument("--api-key", help="MailCow API key", default=None)
+    parser.add_argument("--username", help="Email address/mailbox username", default=None)
+    parser.add_argument(
+        "--sieve-file",
+        help="Path to Sieve filter file",
+        default="output/generated.sieve",
     )
     parser.add_argument(
-        '--mailcow-url',
-        help='MailCow URL (e.g., https://mail.example.com)',
-        default=None
+        "--filter-type",
+        help="Filter type (prefilter or postfilter)",
+        choices=["prefilter", "postfilter"],
+        default="prefilter",
     )
     parser.add_argument(
-        '--api-key',
-        help='MailCow API key',
-        default=None
+        "--no-verify-ssl",
+        help="Disable SSL certificate verification",
+        action="store_true",
     )
     parser.add_argument(
-        '--username',
-        help='Email address/mailbox username',
-        default=None
-    )
-    parser.add_argument(
-        '--sieve-file',
-        help='Path to Sieve filter file',
-        default='output/generated.sieve'
-    )
-    parser.add_argument(
-        '--filter-type',
-        help='Filter type (prefilter or postfilter)',
-        choices=['prefilter', 'postfilter'],
-        default='prefilter'
-    )
-    parser.add_argument(
-        '--no-verify-ssl',
-        help='Disable SSL certificate verification',
-        action='store_true'
-    )
-    parser.add_argument(
-        '--inactive',
-        help='Upload as inactive (disabled) filter',
-        action='store_true'
+        "--inactive", help="Upload as inactive (disabled) filter", action="store_true"
     )
 
     args = parser.parse_args()
@@ -170,7 +148,7 @@ def main():
     if not mailcow_url:
         if config:
             # Try to infer from IMAP server
-            imap_server = config.get('imap', {}).get('server', '')
+            imap_server = config.get("imap", {}).get("server", "")
             if imap_server:
                 # Assume MailCow is on the same domain
                 mailcow_url = f"https://{imap_server}"
@@ -180,7 +158,7 @@ def main():
             mailcow_url = input("MailCow URL (e.g., https://mail.example.com): ")
 
     # Remove trailing slash
-    mailcow_url = mailcow_url.rstrip('/')
+    mailcow_url = mailcow_url.rstrip("/")
 
     # Get API key
     api_key = args.api_key
@@ -197,7 +175,7 @@ def main():
     username = args.username
     if not username:
         if config:
-            username = config.get('imap', {}).get('username', '')
+            username = config.get("imap", {}).get("username", "")
             if username:
                 print(f"ℹ️  Using username from config: {username}")
 
@@ -212,10 +190,10 @@ def main():
         sys.exit(1)
 
     print(f"📄 Reading Sieve filter: {sieve_file}")
-    script_data = sieve_file.read_text(encoding='utf-8')
+    script_data = sieve_file.read_text(encoding="utf-8")
 
     # Show preview
-    lines = script_data.split('\n')
+    lines = script_data.split("\n")
     print()
     print("📋 Filter Preview (first 20 lines):")
     print("-" * 70)
@@ -227,7 +205,7 @@ def main():
     print()
 
     # Ask for confirmation
-    print(f"Upload Settings:")
+    print("Upload Settings:")
     print(f"  • MailCow URL: {mailcow_url}")
     print(f"  • Username: {username}")
     print(f"  • Filter Type: {args.filter_type}")
@@ -236,7 +214,7 @@ def main():
     print()
 
     response = input("❓ Upload this filter to MailCow? (y/n): ").lower()
-    if response not in ['y', 'yes']:
+    if response not in ["y", "yes"]:
         print("❌ Cancelled by user.")
         sys.exit(0)
 
@@ -249,7 +227,7 @@ def main():
         script_data=script_data,
         filter_type=args.filter_type,
         active=not args.inactive,
-        verify_ssl=not args.no_verify_ssl
+        verify_ssl=not args.no_verify_ssl,
     )
 
     if success:
@@ -277,5 +255,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

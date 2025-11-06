@@ -88,8 +88,8 @@ class HDBSCANClusteringAdapter(IClusteringService):
         clusterer = hdbscan.HDBSCAN(
             min_cluster_size=max(min_cluster_size, self.min_cluster_size),
             min_samples=self.min_samples,
-            metric='euclidean',  # Works well with normalized embeddings
-            cluster_selection_method='eom',  # Excess of Mass
+            metric="euclidean",  # Works well with normalized embeddings
+            cluster_selection_method="eom",  # Excess of Mass
             prediction_data=True,
         )
 
@@ -217,8 +217,8 @@ class HDBSCANClusteringAdapter(IClusteringService):
         clusterer = hdbscan.HDBSCAN(
             min_cluster_size=self.outlier_min_cluster_size,
             min_samples=max(1, self.min_samples - 1),  # Lower min_samples
-            metric='euclidean',
-            cluster_selection_method='leaf',  # More lenient selection method
+            metric="euclidean",
+            cluster_selection_method="leaf",  # More lenient selection method
             prediction_data=True,
         )
 

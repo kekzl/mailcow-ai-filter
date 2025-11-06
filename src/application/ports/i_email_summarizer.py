@@ -31,9 +31,7 @@ class IEmailSummarizer(Protocol):
         ...
 
     def summarize_batch(
-        self,
-        emails: Sequence[Email],
-        max_parallel: int = 10
+        self, emails: Sequence[Email], max_parallel: int = 10
     ) -> list[EmailSummary]:
         """Summarize multiple emails in parallel.
 

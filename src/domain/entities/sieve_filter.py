@@ -1,13 +1,11 @@
 """SieveFilter entity - Aggregate root for Sieve filter rules."""
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Self
-import uuid
 
 from ..value_objects.filter_rule import FilterRule
-from ..value_objects.filter_action import FilterAction
-from ..value_objects.filter_condition import FilterCondition
 
 
 @dataclass
@@ -61,7 +59,7 @@ class SieveFilter:
             description=description,
             rules=rules or [],
             enabled=enabled,
-            priority=priority
+            priority=priority,
         )
 
     def add_rule(self, rule: FilterRule) -> None:

@@ -45,9 +45,7 @@ class FilterGenerator:
         """
         self.min_confidence = min_confidence
 
-    def generate_filter_from_categories(
-        self, categories: list[CategoryPattern]
-    ) -> SieveFilter:
+    def generate_filter_from_categories(self, categories: list[CategoryPattern]) -> SieveFilter:
         """Generate a complete Sieve filter from AI-detected categories.
 
         Args:
@@ -63,9 +61,7 @@ class FilterGenerator:
             raise ValueError("No categories provided for filter generation")
 
         # Filter by confidence threshold
-        valid_categories = [
-            cat for cat in categories if cat.confidence >= self.min_confidence
-        ]
+        valid_categories = [cat for cat in categories if cat.confidence >= self.min_confidence]
 
         if not valid_categories:
             raise ValueError(
@@ -86,7 +82,7 @@ class FilterGenerator:
             if category.subcategories:
                 sorted_subcats = sorted(
                     [sc for sc in category.subcategories if sc.confidence >= self.min_confidence],
-                    key=self._get_category_priority
+                    key=self._get_category_priority,
                 )
                 for subcat in sorted_subcats:
                     sub_rule = self._create_rule_from_category(subcat)
@@ -125,32 +121,80 @@ class FilterGenerator:
         combined = f"{name_lower} {desc_lower}"
 
         # Security/Alerts - highest priority
-        security_keywords = ['security', 'alert', 'warning', 'critical', 'urgent', 'notification']
+        security_keywords = [
+            "security",
+            "alert",
+            "warning",
+            "critical",
+            "urgent",
+            "notification",
+        ]
         if any(kw in combined for kw in security_keywords):
             return 0
 
         # Finance/Banking
-        finance_keywords = ['finance', 'bank', 'payment', 'invoice', 'receipt', 'bill', 'paypal', 'stripe']
+        finance_keywords = [
+            "finance",
+            "bank",
+            "payment",
+            "invoice",
+            "receipt",
+            "bill",
+            "paypal",
+            "stripe",
+        ]
         if any(kw in combined for kw in finance_keywords):
             return 10
 
         # Work/Professional
-        work_keywords = ['work', 'github', 'gitlab', 'ci/cd', 'ci-cd', 'code', 'deploy', 'meeting', 'slack']
+        work_keywords = [
+            "work",
+            "github",
+            "gitlab",
+            "ci/cd",
+            "ci-cd",
+            "code",
+            "deploy",
+            "meeting",
+            "slack",
+        ]
         if any(kw in combined for kw in work_keywords):
             return 20
 
         # Shopping/Orders
-        shopping_keywords = ['shop', 'order', 'shipping', 'delivery', 'amazon', 'ebay', 'purchase']
+        shopping_keywords = [
+            "shop",
+            "order",
+            "shipping",
+            "delivery",
+            "amazon",
+            "ebay",
+            "purchase",
+        ]
         if any(kw in combined for kw in shopping_keywords):
             return 30
 
         # Social Media
-        social_keywords = ['social', 'facebook', 'twitter', 'linkedin', 'instagram', 'message']
+        social_keywords = [
+            "social",
+            "facebook",
+            "twitter",
+            "linkedin",
+            "instagram",
+            "message",
+        ]
         if any(kw in combined for kw in social_keywords):
             return 40
 
         # Newsletters/Promotions
-        promo_keywords = ['newsletter', 'promotion', 'marketing', 'ad', 'offer', 'subscribe']
+        promo_keywords = [
+            "newsletter",
+            "promotion",
+            "marketing",
+            "ad",
+            "offer",
+            "subscribe",
+        ]
         if any(kw in combined for kw in promo_keywords):
             return 50
 
@@ -202,9 +246,7 @@ class FilterGenerator:
             logical_operator=logical_operator,
         )
 
-    def generate_filter_from_raw_response(
-        self, ai_response: dict[str, Any]
-    ) -> SieveFilter:
+    def generate_filter_from_raw_response(self, ai_response: dict[str, Any]) -> SieveFilter:
         """Generate filter from raw AI JSON response.
 
         Args:
@@ -225,7 +267,7 @@ class FilterGenerator:
                 category = self._parse_category(cat_dict)
                 if category:
                     categories.append(category)
-            except (KeyError, TypeError) as e:
+            except (KeyError, TypeError):
                 # Skip malformed categories
                 continue
 

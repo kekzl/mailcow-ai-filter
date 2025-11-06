@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from ..entities.sieve_filter import SieveFilter
-from ..value_objects.filter_condition import FilterCondition, INVALID_DOMAINS, GENERIC_DOMAINS
+from ..value_objects.filter_condition import (
+    GENERIC_DOMAINS,
+    INVALID_DOMAINS,
+)
 from ..value_objects.filter_rule import FilterRule
 
 
@@ -40,12 +42,14 @@ class FilterValidator:
 
         # Check for empty filter
         if not sieve_filter.rules:
-            issues.append(ValidationIssue(
-                severity="error",
-                rule_name="Filter",
-                message="Filter has no rules",
-                suggestion="Add at least one filter rule"
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity="error",
+                    rule_name="Filter",
+                    message="Filter has no rules",
+                    suggestion="Add at least one filter rule",
+                )
+            )
             return issues
 
         # Validate each rule
@@ -79,21 +83,25 @@ class FilterValidator:
 
         # Check for empty conditions
         if not rule.conditions:
-            issues.append(ValidationIssue(
-                severity="error",
-                rule_name=rule.name or "Unnamed",
-                message="Rule has no conditions",
-                suggestion="Add at least one condition to match emails"
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity="error",
+                    rule_name=rule.name or "Unnamed",
+                    message="Rule has no conditions",
+                    suggestion="Add at least one condition to match emails",
+                )
+            )
 
         # Check for empty actions
         if not rule.actions:
-            issues.append(ValidationIssue(
-                severity="error",
-                rule_name=rule.name or "Unnamed",
-                message="Rule has no actions",
-                suggestion="Add at least one action (e.g., fileinto)"
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity="error",
+                    rule_name=rule.name or "Unnamed",
+                    message="Rule has no actions",
+                    suggestion="Add at least one action (e.g., fileinto)",
+                )
+            )
 
         return issues
 
@@ -112,12 +120,14 @@ class FilterValidator:
             if condition.condition_type.value == "address_domain":
                 domain = condition.value.lower()
                 if domain in INVALID_DOMAINS:
-                    issues.append(ValidationIssue(
-                        severity="error",
-                        rule_name=rule.name or "Unnamed",
-                        message=f"Placeholder domain detected: {domain}",
-                        suggestion=f"Replace '{domain}' with a real domain from your emails"
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            severity="error",
+                            rule_name=rule.name or "Unnamed",
+                            message=f"Placeholder domain detected: {domain}",
+                            suggestion=f"Replace '{domain}' with a real domain from your emails",
+                        )
+                    )
 
         return issues
 
@@ -136,12 +146,14 @@ class FilterValidator:
             if condition.condition_type.value == "address_domain":
                 domain = condition.value.lower()
                 if domain in GENERIC_DOMAINS:
-                    issues.append(ValidationIssue(
-                        severity="warning",
-                        rule_name=rule.name or "Unnamed",
-                        message=f"Overly generic domain: {domain}",
-                        suggestion=f"Domain '{domain}' is too generic and may match unintended emails"
-                    ))
+                    issues.append(
+                        ValidationIssue(
+                            severity="warning",
+                            rule_name=rule.name or "Unnamed",
+                            message=f"Overly generic domain: {domain}",
+                            suggestion=f"Domain '{domain}' is too generic and may match unintended emails",
+                        )
+                    )
 
         return issues
 
@@ -157,16 +169,18 @@ class FilterValidator:
         issues = []
 
         for condition in rule.conditions:
-            if ',' in condition.value:
-                issues.append(ValidationIssue(
-                    severity="error",
-                    rule_name=rule.name or "Unnamed",
-                    message=f"Comma found in condition value: '{condition.value}'",
-                    suggestion=(
-                        f"Split '{condition.value}' into multiple conditions. "
-                        "Use anyof logic to match ANY of the keywords."
+            if "," in condition.value:
+                issues.append(
+                    ValidationIssue(
+                        severity="error",
+                        rule_name=rule.name or "Unnamed",
+                        message=f"Comma found in condition value: '{condition.value}'",
+                        suggestion=(
+                            f"Split '{condition.value}' into multiple conditions. "
+                            "Use anyof logic to match ANY of the keywords."
+                        ),
                     )
-                ))
+                )
 
         return issues
 
@@ -188,7 +202,7 @@ class FilterValidator:
             # Extract target folder from fileinto action
             target_folder = None
             for action in rule.actions:
-                if hasattr(action, 'folder'):
+                if hasattr(action, "folder"):
                     target_folder = action.folder
                     break
 
@@ -218,12 +232,14 @@ class FilterValidator:
         # Report domains used in multiple folders
         for domain, folders in domain_to_folders.items():
             if len(folders) > 1:
-                issues.append(ValidationIssue(
-                    severity="warning",
-                    rule_name="Multiple Rules",
-                    message=f"Domain '{domain}' used in multiple folders: {', '.join(folders)}",
-                    suggestion="This may cause emails to be sorted into the first matching folder only"
-                ))
+                issues.append(
+                    ValidationIssue(
+                        severity="warning",
+                        rule_name="Multiple Rules",
+                        message=f"Domain '{domain}' used in multiple folders: {', '.join(folders)}",
+                        suggestion="This may cause emails to be sorted into the first matching folder only",
+                    )
+                )
 
         return issues
 

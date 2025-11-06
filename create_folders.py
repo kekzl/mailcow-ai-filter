@@ -12,7 +12,6 @@ This script:
 import imaplib
 import re
 import sys
-from pathlib import Path
 
 
 def extract_folders_from_sieve(sieve_file: str) -> list[str]:
@@ -26,7 +25,7 @@ def extract_folders_from_sieve(sieve_file: str) -> list[str]:
     """
     folders = set()
 
-    with open(sieve_file, 'r', encoding='utf-8') as f:
+    with open(sieve_file, "r", encoding="utf-8") as f:
         content = f.read()
 
     # Find all 'fileinto "folder/path"' statements
@@ -37,9 +36,9 @@ def extract_folders_from_sieve(sieve_file: str) -> list[str]:
         folders.add(folder_path)
 
         # Also add parent folders
-        parts = folder_path.split('/')
+        parts = folder_path.split("/")
         for i in range(1, len(parts)):
-            parent = '/'.join(parts[:i])
+            parent = "/".join(parts[:i])
             folders.add(parent)
 
     return sorted(folders)
@@ -83,7 +82,7 @@ def get_existing_folders(conn) -> set[str]:
     """
     try:
         status, folder_list = conn.list()
-        if status != 'OK':
+        if status != "OK":
             return set()
 
         folders = set()
@@ -114,7 +113,7 @@ def create_folder(conn, folder_name: str) -> bool:
     """
     try:
         status, _ = conn.create(f'"{folder_name}"')
-        if status == 'OK':
+        if status == "OK":
             return True
         else:
             return False
@@ -132,19 +131,20 @@ def main():
 
     # Load configuration
     try:
-        import yaml
         from pathlib import Path
 
-        config_file = Path(__file__).parent / 'config' / 'config.yml'
-        with open(config_file, 'r') as f:
+        import yaml
+
+        config_file = Path(__file__).parent / "config" / "config.yml"
+        with open(config_file, "r") as f:
             config = yaml.safe_load(f)
 
-        imap_config = config.get('imap', {})
-        server = imap_config.get('server')
-        username = imap_config.get('username')
-        password = imap_config.get('password')
-        use_ssl = imap_config.get('use_ssl', True)
-        port = imap_config.get('port', 993)
+        imap_config = config.get("imap", {})
+        server = imap_config.get("server")
+        username = imap_config.get("username")
+        password = imap_config.get("password")
+        use_ssl = imap_config.get("use_ssl", True)
+        port = imap_config.get("port", 993)
 
     except Exception as e:
         print(f"⚠️  Could not load config: {e}")
@@ -152,12 +152,13 @@ def main():
         server = input("IMAP Server: ")
         username = input("Username: ")
         import getpass
+
         password = getpass.getpass("Password: ")
-        use_ssl = input("Use SSL? (y/n): ").lower() == 'y'
+        use_ssl = input("Use SSL? (y/n): ").lower() == "y"
         port = int(input("Port (993 for SSL, 143 for non-SSL): "))
 
     # Find Sieve filter file
-    sieve_file = Path(__file__).parent / 'output' / 'generated.sieve'
+    sieve_file = Path(__file__).parent / "output" / "generated.sieve"
 
     if not sieve_file.exists():
         print(f"❌ Sieve filter not found: {sieve_file}")
@@ -182,7 +183,7 @@ def main():
     # Ask for confirmation
     response = input("❓ Do you want to create these folders? (y/n): ").lower()
 
-    if response not in ['y', 'yes']:
+    if response not in ["y", "yes"]:
         print("❌ Cancelled by user.")
         sys.exit(0)
 
@@ -213,7 +214,7 @@ def main():
             # Ask for individual permission
             response = input(f"  ❓ Create '{folder}'? (y/n/all): ").lower()
 
-            if response == 'all':
+            if response == "all":
                 # Create this and all remaining without asking
                 if create_folder(conn, folder):
                     print(f"  ✅ Created '{folder}'")
@@ -233,7 +234,7 @@ def main():
                             failed += 1
                 break
 
-            elif response in ['y', 'yes']:
+            elif response in ["y", "yes"]:
                 if create_folder(conn, folder):
                     print(f"  ✅ Created '{folder}'")
                     created += 1
@@ -259,5 +260,5 @@ def main():
     print("Done! You can now upload the Sieve filter to MailCow.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

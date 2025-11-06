@@ -1,9 +1,9 @@
 """Email entity - Aggregate root for email messages."""
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Self
-import uuid
 
 from ..value_objects.email_address import EmailAddress
 from ..value_objects.email_pattern import EmailPattern
@@ -71,7 +71,7 @@ class Email:
             received_at=received_at or datetime.now(),
             folder=folder,
             message_id=message_id,
-            has_attachments=has_attachments
+            has_attachments=has_attachments,
         )
 
     def matches_pattern(self, pattern: EmailPattern) -> bool:

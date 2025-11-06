@@ -66,17 +66,15 @@ class OllamaEmailSummarizer(IEmailSummarizer):
         return EmailSummary.create(
             email_id=email.message_id or email.subject[:50],
             sender_domain=email.sender.domain,
-            category=summary_data['category'],
-            topic=summary_data['topic'],
-            keywords=summary_data['keywords'],
+            category=summary_data["category"],
+            topic=summary_data["topic"],
+            keywords=summary_data["keywords"],
             folder=email.folder,
             received_at=email.received_at,
         )
 
     def summarize_batch(
-        self,
-        emails: Sequence[Email],
-        max_parallel: int = 3
+        self, emails: Sequence[Email], max_parallel: int = 3
     ) -> list[EmailSummary]:
         """Summarize multiple emails in parallel.
 
@@ -87,16 +85,15 @@ class OllamaEmailSummarizer(IEmailSummarizer):
         Returns:
             List of email summaries
         """
-        logger.info(f"Batch summarizing {len(emails)} emails with {max_parallel} parallel workers...")
+        logger.info(
+            f"Batch summarizing {len(emails)} emails with {max_parallel} parallel workers..."
+        )
 
         summaries = []
 
         with ThreadPoolExecutor(max_workers=max_parallel) as executor:
             # Submit all tasks
-            future_to_email = {
-                executor.submit(self.summarize, email): email
-                for email in emails
-            }
+            future_to_email = {executor.submit(self.summarize, email): email for email in emails}
 
             # Collect results as they complete
             for future in as_completed(future_to_email):
@@ -177,14 +174,14 @@ Your JSON output:"""
                     "temperature": 0.1,  # Very low for consistent extraction
                     "num_predict": 200,  # Short response
                     "top_p": 0.9,
-                }
+                },
             },
-            timeout=30  # Fast timeout for worker model
+            timeout=30,  # Fast timeout for worker model
         )
         response.raise_for_status()
 
         result = response.json()
-        return result.get('response', '')
+        return result.get("response", "")
 
     def _parse_response(self, response_text: str, email: Email) -> dict:
         """Parse Ollama response into structured data.
@@ -203,18 +200,20 @@ Your JSON output:"""
             raise ValueError("AI returned empty response")
 
         # Strip <think> tags if present
-        cleaned_text = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL | re.IGNORECASE)
+        cleaned_text = re.sub(
+            r"<think>.*?</think>", "", response_text, flags=re.DOTALL | re.IGNORECASE
+        )
         cleaned_text = cleaned_text.strip()
 
         # Extract JSON - try different patterns
         # 1. Try with code blocks
-        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', cleaned_text, re.DOTALL)
+        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1)
         # 2. Try finding first { to last }
-        elif '{' in cleaned_text and '}' in cleaned_text:
-            start = cleaned_text.find('{')
-            end = cleaned_text.rfind('}') + 1
+        elif "{" in cleaned_text and "}" in cleaned_text:
+            start = cleaned_text.find("{")
+            end = cleaned_text.rfind("}") + 1
             json_str = cleaned_text[start:end]
         else:
             logger.warning(f"No JSON found in response: {cleaned_text[:200]}")
@@ -223,27 +222,27 @@ Your JSON output:"""
         # Parse JSON with fixes
         try:
             # Replace Unicode quotes
-            json_str = json_str.replace('„', '').replace('"', '').replace('"', '')
-            json_str = json_str.replace(''', "'").replace(''', "'")
+            json_str = json_str.replace("„", "").replace('"', "").replace('"', "")
+            json_str = json_str.replace(""", "'").replace(""", "'")
 
             # Fix unquoted property names (e.g., {sender_type: "value"} → {"sender_type": "value"})
-            json_str = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)', r'\1"\2"\3', json_str)
+            json_str = re.sub(r"([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)", r'\1"\2"\3', json_str)
 
             # Fix unquoted string values after colons (e.g., "key": Value → "key": "Value")
             # Match: colon, optional space, unquoted word(s), then comma or closing brace
-            json_str = re.sub(
-                r':\s*([A-Z][a-zA-Z0-9/\-\s]+)(?=\s*[,}])',
-                r': "\1"',
-                json_str
-            )
+            json_str = re.sub(r":\s*([A-Z][a-zA-Z0-9/\-\s]+)(?=\s*[,}])", r': "\1"', json_str)
 
             # Fix unquoted array items (e.g., [item1, item2] → ["item1", "item2"])
             # Match items inside brackets that aren't already quoted
             json_str = re.sub(
-                r'\[([^\]]+)\]',
-                lambda m: '[' + ', '.join(f'"{item.strip()}"' if not item.strip().startswith('"') else item.strip()
-                                         for item in m.group(1).split(',')) + ']',
-                json_str
+                r"\[([^\]]+)\]",
+                lambda m: "["
+                + ", ".join(
+                    (f'"{item.strip()}"' if not item.strip().startswith('"') else item.strip())
+                    for item in m.group(1).split(",")
+                )
+                + "]",
+                json_str,
             )
 
             # DEBUG: Log the JSON string being parsed
@@ -256,14 +255,14 @@ Your JSON output:"""
             raise ValueError(f"Invalid JSON: {e}")
 
         # Validate required fields
-        required = ['category', 'topic', 'keywords']
+        required = ["category", "topic", "keywords"]
         for field in required:
             if field not in result:
                 raise ValueError(f"Missing field: {field}")
 
         # Ensure keywords is a list
-        if not isinstance(result['keywords'], list):
-            result['keywords'] = [result['keywords']]
+        if not isinstance(result["keywords"], list):
+            result["keywords"] = [result["keywords"]]
 
         return result
 
@@ -283,32 +282,36 @@ Your JSON output:"""
         subject_lower = email.subject.lower()
 
         # Determine dynamic category based on content
-        if any(word in sender_domain for word in ['github', 'gitlab']) or \
-           any(word in subject_lower for word in ['pull request', 'pr', 'review']):
-            category = 'Code Reviews'
-        elif any(word in sender_domain for word in ['jenkins', 'ci']) or \
-             any(word in subject_lower for word in ['ci', 'cd', 'pipeline', 'build']):
-            category = 'CI/CD'
-        elif any(word in subject_lower for word in ['order', 'bestell', 'confirmed']):
-            category = 'Orders'
-        elif any(word in subject_lower for word in ['ship', 'delivery', 'versand', 'zugestellt']):
-            category = 'Shipping'
-        elif any(word in subject_lower for word in ['birthday', 'geburtstag']):
-            category = 'Birthdays'
-        elif any(word in subject_lower for word in ['friend', 'freund']):
-            category = 'Friends'
-        elif any(word in subject_lower for word in ['finance', 'stock', 'aktien']):
-            category = 'Finance'
-        elif any(word in subject_lower for word in ['offer', 'sale', 'discount', 'deal', 'promotion']):
-            category = 'Promotions'
-        elif any(word in sender_domain for word in ['newsletter', 'news', 'marketing']):
-            category = 'Newsletter'
-        elif 'noreply' in sender_domain or 'notification' in sender_domain:
-            category = 'Notifications'
-        elif any(word in subject_lower for word in ['hi', 'hello', 're:', 'fwd:']):
-            category = 'Social'
+        if any(word in sender_domain for word in ["github", "gitlab"]) or any(
+            word in subject_lower for word in ["pull request", "pr", "review"]
+        ):
+            category = "Code Reviews"
+        elif any(word in sender_domain for word in ["jenkins", "ci"]) or any(
+            word in subject_lower for word in ["ci", "cd", "pipeline", "build"]
+        ):
+            category = "CI/CD"
+        elif any(word in subject_lower for word in ["order", "bestell", "confirmed"]):
+            category = "Orders"
+        elif any(word in subject_lower for word in ["ship", "delivery", "versand", "zugestellt"]):
+            category = "Shipping"
+        elif any(word in subject_lower for word in ["birthday", "geburtstag"]):
+            category = "Birthdays"
+        elif any(word in subject_lower for word in ["friend", "freund"]):
+            category = "Friends"
+        elif any(word in subject_lower for word in ["finance", "stock", "aktien"]):
+            category = "Finance"
+        elif any(
+            word in subject_lower for word in ["offer", "sale", "discount", "deal", "promotion"]
+        ):
+            category = "Promotions"
+        elif any(word in sender_domain for word in ["newsletter", "news", "marketing"]):
+            category = "Newsletter"
+        elif "noreply" in sender_domain or "notification" in sender_domain:
+            category = "Notifications"
+        elif any(word in subject_lower for word in ["hi", "hello", "re:", "fwd:"]):
+            category = "Social"
         else:
-            category = 'General'
+            category = "General"
 
         # Extract simple keywords from subject
         keywords = [word.lower() for word in email.subject.split() if len(word) > 3][:5]

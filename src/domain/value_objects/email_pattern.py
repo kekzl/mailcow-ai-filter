@@ -35,7 +35,7 @@ class EmailPattern:
             pattern_type="domain",
             value=domain,
             confidence=confidence,
-            sample_count=sample_count
+            sample_count=sample_count,
         )
 
     @classmethod
@@ -45,7 +45,7 @@ class EmailPattern:
             pattern_type="subject",
             value=keyword,
             confidence=confidence,
-            sample_count=sample_count
+            sample_count=sample_count,
         )
 
     @classmethod
@@ -55,7 +55,7 @@ class EmailPattern:
             pattern_type="sender",
             value=sender,
             confidence=confidence,
-            sample_count=sample_count
+            sample_count=sample_count,
         )
 
     def to_filter_string(self) -> str:

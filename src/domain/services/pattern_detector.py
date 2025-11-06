@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from ..entities.email import Email
-from ..value_objects.email_pattern import EmailPattern
 
 
 @dataclass
@@ -77,9 +76,7 @@ class PatternDetector:
 
         return valid_patterns
 
-    def _detect_sender_domain_patterns(
-        self, emails: Sequence[Email]
-    ) -> list[DetectedPattern]:
+    def _detect_sender_domain_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
         """Detect patterns based on sender domains.
 
         Args:
@@ -88,9 +85,7 @@ class PatternDetector:
         Returns:
             List of domain-based patterns
         """
-        domain_data: dict[str, dict] = defaultdict(
-            lambda: {"count": 0, "subjects": []}
-        )
+        domain_data: dict[str, dict] = defaultdict(lambda: {"count": 0, "subjects": []})
 
         for email in emails:
             domain = email.sender.domain
@@ -120,9 +115,7 @@ class PatternDetector:
 
         return patterns
 
-    def _detect_subject_keyword_patterns(
-        self, emails: Sequence[Email]
-    ) -> list[DetectedPattern]:
+    def _detect_subject_keyword_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
         """Detect patterns based on subject keywords.
 
         Args:
@@ -131,9 +124,7 @@ class PatternDetector:
         Returns:
             List of keyword-based patterns
         """
-        keyword_data: dict[str, dict] = defaultdict(
-            lambda: {"count": 0, "subjects": []}
-        )
+        keyword_data: dict[str, dict] = defaultdict(lambda: {"count": 0, "subjects": []})
 
         # Common words to ignore
         stop_words = {
@@ -203,9 +194,7 @@ class PatternDetector:
 
         return patterns
 
-    def _detect_sender_address_patterns(
-        self, emails: Sequence[Email]
-    ) -> list[DetectedPattern]:
+    def _detect_sender_address_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
         """Detect patterns based on specific sender addresses.
 
         Args:
@@ -214,9 +203,7 @@ class PatternDetector:
         Returns:
             List of sender address-based patterns
         """
-        sender_data: dict[str, dict] = defaultdict(
-            lambda: {"count": 0, "subjects": []}
-        )
+        sender_data: dict[str, dict] = defaultdict(lambda: {"count": 0, "subjects": []})
 
         for email in emails:
             sender = email.sender.value
@@ -276,9 +263,7 @@ class PatternDetector:
 
         return matching_emails
 
-    def analyze_email_distribution(
-        self, emails: Sequence[Email]
-    ) -> dict[str, int]:
+    def analyze_email_distribution(self, emails: Sequence[Email]) -> dict[str, int]:
         """Analyze distribution of emails across folders.
 
         Args:
@@ -290,9 +275,7 @@ class PatternDetector:
         folder_counts: dict[str, int] = Counter(email.folder for email in emails)
         return dict(folder_counts)
 
-    def suggest_folder_for_pattern(
-        self, emails: Sequence[Email], pattern: DetectedPattern
-    ) -> str:
+    def suggest_folder_for_pattern(self, emails: Sequence[Email], pattern: DetectedPattern) -> str:
         """Suggest a folder name based on pattern and email distribution.
 
         Args:
@@ -310,9 +293,7 @@ class PatternDetector:
 
         # If most emails are already in one folder, suggest that
         if folder_distribution:
-            most_common_folder = max(
-                folder_distribution.items(), key=lambda x: x[1]
-            )[0]
+            most_common_folder = max(folder_distribution.items(), key=lambda x: x[1])[0]
 
             # Avoid suggesting INBOX or system folders
             if most_common_folder not in ["INBOX", "Trash", "Spam", "Junk", "Sent"]:

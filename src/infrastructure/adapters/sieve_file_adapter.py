@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from pathlib import Path
 
 from src.application.ports.i_filter_repository import IFilterRepository
@@ -46,7 +45,7 @@ class SieveFileAdapter(IFilterRepository):
             sieve_script = sieve_filter.to_sieve_script()
 
             # Write to file
-            with open(output_file, 'w', encoding='utf-8') as f:
+            with open(output_file, "w", encoding="utf-8") as f:
                 f.write(sieve_script)
 
             logger.info(f"Saved Sieve filter to {output_file}")

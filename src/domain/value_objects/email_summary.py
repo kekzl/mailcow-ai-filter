@@ -14,7 +14,9 @@ class EmailSummary:
 
     email_id: str
     sender_domain: str
-    category: str  # Dynamic category determined by worker model (e.g., "CI/CD", "Orders", "Birthdays")
+    category: (
+        str  # Dynamic category determined by worker model (e.g., "CI/CD", "Orders", "Birthdays")
+    )
     topic: str  # Brief topic description
     keywords: tuple[str, ...]  # Key terms from subject/body
     folder: str
@@ -30,7 +32,7 @@ class EmailSummary:
         keywords: list[str],
         folder: str,
         received_at: datetime,
-    ) -> 'EmailSummary':
+    ) -> "EmailSummary":
         """Factory method to create EmailSummary with validation.
 
         Args:

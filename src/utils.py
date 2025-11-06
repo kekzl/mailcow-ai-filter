@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-def setup_logging(level: str = 'INFO', log_file: str | None = None) -> None:
+def setup_logging(level: str = "INFO", log_file: str | None = None) -> None:
     """Configure logging for the application.
 
     Args:
@@ -17,13 +17,11 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None) -> None:
 
     # Create formatters
     detailed_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    simple_formatter = logging.Formatter(
-        '%(levelname)s: %(message)s'
-    )
+    simple_formatter = logging.Formatter("%(levelname)s: %(message)s")
 
     # Configure root logger
     root_logger = logging.getLogger()
@@ -44,7 +42,7 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None) -> None:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(numeric_level)
         file_handler.setFormatter(detailed_formatter)
         root_logger.addHandler(file_handler)
@@ -52,8 +50,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None) -> None:
         root_logger.info(f"Logging to file: {log_file}")
 
     # Set third-party loggers to WARNING to reduce noise
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('httpx').setLevel(logging.WARNING)
-    logging.getLogger('httpcore').setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     root_logger.debug(f"Logging configured: level={level}, file={log_file}")

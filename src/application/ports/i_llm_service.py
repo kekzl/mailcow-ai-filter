@@ -12,7 +12,7 @@ from src.domain.value_objects.email_summary import EmailSummary
 
 class ILLMService(ABC):
     """Port interface for LLM service adapters.
-    
+
     Implementations might include:
     - OllamaAdapter (local LLMs)
     - AnthropicAdapter (Claude API)
@@ -27,11 +27,11 @@ class ILLMService(ABC):
         max_sample: int = 20,
     ) -> dict[str, Any]:
         """Analyze emails and detect patterns/categories.
-        
+
         Args:
             emails: Collection of emails to analyze
             max_sample: Maximum emails to include in analysis
-            
+
         Returns:
             Dictionary containing:
                 {
@@ -47,21 +47,19 @@ class ILLMService(ABC):
                         ...
                     ]
                 }
-                
+
         Raises:
             LLMError: If analysis fails
             TimeoutError: If analysis times out
         """
-        pass
 
     @abstractmethod
     def health_check(self) -> bool:
         """Check if LLM service is available.
-        
+
         Returns:
             True if service is healthy
         """
-        pass
 
     @abstractmethod
     def get_model_info(self) -> dict[str, str]:
@@ -70,7 +68,6 @@ class ILLMService(ABC):
         Returns:
             Dictionary with model details (name, version, provider, etc.)
         """
-        pass
 
     def analyze_summaries(
         self,
@@ -89,10 +86,7 @@ class ILLMService(ABC):
             Dictionary containing hierarchical categories
         """
         # Default implementation for adapters that don't override
-        return self.analyze_emails(
-            emails=[],  # Not used in this mode
-            max_sample=max_sample
-        )
+        return self.analyze_emails(emails=[], max_sample=max_sample)  # Not used in this mode
 
     def analyze_clusters(
         self,
@@ -112,6 +106,5 @@ class ILLMService(ABC):
         """
         # Default implementation for adapters that don't override
         return self.analyze_emails(
-            emails=[],  # Not used in this mode
-            max_sample=max_representatives
+            emails=[], max_sample=max_representatives  # Not used in this mode
         )

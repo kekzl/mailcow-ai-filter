@@ -22,7 +22,7 @@ class SentenceTransformerAdapter(IEmbeddingService):
     Default model: all-MiniLM-L6-v2 (384 dimensions, 80MB, fast)
     """
 
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """Initialize sentence transformer model.
 
         Args:
@@ -49,7 +49,9 @@ class SentenceTransformerAdapter(IEmbeddingService):
             2D numpy array of shape (n_emails, embedding_dim)
         """
         if not emails:
-            return np.array([], dtype=np.float32).reshape(0, self.model.get_sentence_embedding_dimension())
+            return np.array([], dtype=np.float32).reshape(
+                0, self.model.get_sentence_embedding_dimension()
+            )
 
         logger.info(f"Encoding {len(emails)} emails to embeddings...")
 

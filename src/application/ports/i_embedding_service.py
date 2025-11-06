@@ -25,7 +25,6 @@ class IEmbeddingService(ABC):
             2D numpy array of shape (n_emails, embedding_dim)
             where each row is the embedding vector for an email
         """
-        pass
 
     @abstractmethod
     def encode_text(self, text: str) -> NDArray[np.float32]:
@@ -37,4 +36,3 @@ class IEmbeddingService(ABC):
         Returns:
             1D numpy array of shape (embedding_dim,)
         """
-        pass

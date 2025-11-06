@@ -32,7 +32,6 @@ class IClusteringService(ABC):
         Returns:
             List of EmailCluster objects (excludes noise/outliers)
         """
-        pass
 
     @abstractmethod
     def find_representative_indices(
@@ -51,4 +50,3 @@ class IClusteringService(ABC):
         Returns:
             List of indices of representative emails
         """
-        pass

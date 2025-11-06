@@ -1,9 +1,10 @@
 """FilterRule value object representing a complete filter rule."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Self
-from .filter_condition import FilterCondition
+
 from .filter_action import FilterAction
+from .filter_condition import FilterCondition
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,7 +39,7 @@ class FilterRule:
         actions: list[FilterAction],
         logical_operator: str = "anyof",
         name: str = "",
-        description: str = ""
+        description: str = "",
     ) -> Self:
         """Factory method to create a validated filter rule."""
         return cls(
@@ -46,7 +47,7 @@ class FilterRule:
             actions=tuple(actions),
             logical_operator=logical_operator,
             name=name,
-            description=description
+            description=description,
         )
 
     def to_sieve(self) -> str:

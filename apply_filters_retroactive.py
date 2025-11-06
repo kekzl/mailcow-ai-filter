@@ -9,14 +9,15 @@ the filter rules.
 WARNING: This modifies your existing emails. Make sure you have backups!
 """
 
+import email
+import imaplib
 import re
 import sys
-import yaml
-import imaplib
-import email
-from pathlib import Path
 from email.header import decode_header
-from typing import List, Dict, Tuple, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import yaml
 
 
 class SieveFilterParser:
@@ -30,7 +31,7 @@ class SieveFilterParser:
         """Parse Sieve filter and extract rules"""
         print(f"📖 Parsing Sieve filter: {self.sieve_file}")
 
-        with open(self.sieve_file, 'r', encoding='utf-8') as f:
+        with open(self.sieve_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Extract each filter rule block
@@ -45,10 +46,7 @@ class SieveFilterParser:
             conditions = self._parse_conditions(conditions_block)
 
             if conditions:
-                self.rules.append({
-                    'folder': target_folder,
-                    'conditions': conditions
-                })
+                self.rules.append({"folder": target_folder, "conditions": conditions})
 
         print(f"✅ Parsed {len(self.rules)} filter rules")
         return self.rules
@@ -60,26 +58,17 @@ class SieveFilterParser:
         # Pattern: address :domain :is "from" "example.com"
         domain_pattern = r'address\s+:domain\s+:is\s+"from"\s+"([^"]+)"'
         for match in re.finditer(domain_pattern, conditions_block):
-            conditions.append({
-                'type': 'from_domain',
-                'value': match.group(1)
-            })
+            conditions.append({"type": "from_domain", "value": match.group(1)})
 
         # Pattern: header :contains "subject" "keyword"
         subject_pattern = r'header\s+:contains\s+"subject"\s+"([^"]+)"'
         for match in re.finditer(subject_pattern, conditions_block):
-            conditions.append({
-                'type': 'subject_contains',
-                'value': match.group(1).lower()
-            })
+            conditions.append({"type": "subject_contains", "value": match.group(1).lower()})
 
         # Pattern: header :contains "from" "sender"
         from_pattern = r'header\s+:contains\s+"from"\s+"([^"]+)"'
         for match in re.finditer(from_pattern, conditions_block):
-            conditions.append({
-                'type': 'from_contains',
-                'value': match.group(1).lower()
-            })
+            conditions.append({"type": "from_contains", "value": match.group(1).lower()})
 
         return conditions
 
@@ -91,32 +80,18 @@ class RetroactiveFilterApplicator:
         self.config = imap_config
         self.rules = rules
         self.imap = None
-        self.stats = {
-            'processed': 0,
-            'moved': 0,
-            'errors': 0,
-            'by_folder': {}
-        }
+        self.stats = {"processed": 0, "moved": 0, "errors": 0, "by_folder": {}}
 
     def connect(self):
         """Connect to IMAP server"""
         print(f"\n🔌 Connecting to IMAP: {self.config['server']}:{self.config['port']}")
 
-        if self.config.get('use_ssl', True):
-            self.imap = imaplib.IMAP4_SSL(
-                self.config['server'],
-                self.config['port']
-            )
+        if self.config.get("use_ssl", True):
+            self.imap = imaplib.IMAP4_SSL(self.config["server"], self.config["port"])
         else:
-            self.imap = imaplib.IMAP4(
-                self.config['server'],
-                self.config['port']
-            )
+            self.imap = imaplib.IMAP4(self.config["server"], self.config["port"])
 
-        self.imap.login(
-            self.config['username'],
-            self.config['password']
-        )
+        self.imap.login(self.config["username"], self.config["password"])
         print("✅ Connected successfully")
 
     def disconnect(self):
@@ -125,7 +100,7 @@ class RetroactiveFilterApplicator:
             try:
                 self.imap.close()
                 self.imap.logout()
-            except:
+            except Exception:
                 pass
 
     def apply_filters(self, source_folder: str = "INBOX", dry_run: bool = False):
@@ -136,13 +111,13 @@ class RetroactiveFilterApplicator:
 
         # Select source folder
         status, data = self.imap.select(source_folder)
-        if status != 'OK':
+        if status != "OK":
             print(f"❌ Failed to select folder: {source_folder}")
             return
 
         # Get all email IDs
-        status, data = self.imap.search(None, 'ALL')
-        if status != 'OK':
+        status, data = self.imap.search(None, "ALL")
+        if status != "OK":
             print("❌ Failed to search emails")
             return
 
@@ -157,20 +132,20 @@ class RetroactiveFilterApplicator:
 
         # Process each email
         for i, email_id in enumerate(email_ids, 1):
-            self.stats['processed'] += 1
+            self.stats["processed"] += 1
 
             # Fetch email
-            status, data = self.imap.fetch(email_id, '(RFC822)')
-            if status != 'OK':
-                self.stats['errors'] += 1
+            status, data = self.imap.fetch(email_id, "(RFC822)")
+            if status != "OK":
+                self.stats["errors"] += 1
                 continue
 
             # Parse email
             msg = email.message_from_bytes(data[0][1])
 
             # Extract headers
-            from_addr = self._decode_header(msg.get('From', ''))
-            subject = self._decode_header(msg.get('Subject', ''))
+            from_addr = self._decode_header(msg.get("From", ""))
+            subject = self._decode_header(msg.get("Subject", ""))
 
             # Find matching rule
             target_folder = self._find_matching_folder(from_addr, subject)
@@ -183,21 +158,23 @@ class RetroactiveFilterApplicator:
                 if not dry_run:
                     # Move email
                     if self._move_email(email_id, target_folder):
-                        self.stats['moved'] += 1
-                        self.stats['by_folder'][target_folder] = \
-                            self.stats['by_folder'].get(target_folder, 0) + 1
+                        self.stats["moved"] += 1
+                        self.stats["by_folder"][target_folder] = (
+                            self.stats["by_folder"].get(target_folder, 0) + 1
+                        )
                     else:
-                        self.stats['errors'] += 1
+                        self.stats["errors"] += 1
                 else:
-                    self.stats['moved'] += 1
-                    self.stats['by_folder'][target_folder] = \
-                        self.stats['by_folder'].get(target_folder, 0) + 1
+                    self.stats["moved"] += 1
+                    self.stats["by_folder"][target_folder] = (
+                        self.stats["by_folder"].get(target_folder, 0) + 1
+                    )
             else:
                 # No matching rule - show occasionally
                 if i % 50 == 0:
                     print(f"[{i}/{total_emails}] Processing...")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         self._print_statistics()
 
     def _find_matching_folder(self, from_addr: str, subject: str) -> Optional[str]:
@@ -207,18 +184,18 @@ class RetroactiveFilterApplicator:
 
         for rule in self.rules:
             # Check if any condition matches
-            for condition in rule['conditions']:
-                if condition['type'] == 'from_domain':
+            for condition in rule["conditions"]:
+                if condition["type"] == "from_domain":
                     if f"@{condition['value']}" in from_lower:
-                        return rule['folder']
+                        return rule["folder"]
 
-                elif condition['type'] == 'subject_contains':
-                    if condition['value'] in subject_lower:
-                        return rule['folder']
+                elif condition["type"] == "subject_contains":
+                    if condition["value"] in subject_lower:
+                        return rule["folder"]
 
-                elif condition['type'] == 'from_contains':
-                    if condition['value'] in from_lower:
-                        return rule['folder']
+                elif condition["type"] == "from_contains":
+                    if condition["value"] in from_lower:
+                        return rule["folder"]
 
         return None
 
@@ -230,9 +207,9 @@ class RetroactiveFilterApplicator:
 
             # Copy to target folder
             result = self.imap.copy(email_id, target_folder)
-            if result[0] == 'OK':
+            if result[0] == "OK":
                 # Mark original as deleted
-                self.imap.store(email_id, '+FLAGS', '\\Deleted')
+                self.imap.store(email_id, "+FLAGS", "\\Deleted")
                 return True
         except Exception as e:
             print(f"    ❌ Error moving email: {e}")
@@ -250,34 +227,37 @@ class RetroactiveFilterApplicator:
         for part, encoding in decoded_parts:
             if isinstance(part, bytes):
                 try:
-                    result.append(part.decode(encoding or 'utf-8', errors='ignore'))
-                except:
-                    result.append(part.decode('utf-8', errors='ignore'))
+                    result.append(part.decode(encoding or "utf-8", errors="ignore"))
+                except Exception:
+                    result.append(part.decode("utf-8", errors="ignore"))
             else:
                 result.append(str(part))
 
-        return ''.join(result)
+        return "".join(result)
 
     def _print_statistics(self):
         """Print processing statistics"""
-        print(f"\n📊 Processing Statistics:")
+        print("\n📊 Processing Statistics:")
         print(f"   Total processed: {self.stats['processed']}")
         print(f"   Moved:          {self.stats['moved']}")
         print(f"   Errors:         {self.stats['errors']}")
-        print(f"   Unchanged:      {self.stats['processed'] - self.stats['moved'] - self.stats['errors']}")
+        print(
+            f"   Unchanged:      {self.stats['processed'] - self.stats['moved'] - self.stats['errors']}"
+        )
 
-        if self.stats['by_folder']:
-            print(f"\n📁 Emails moved by folder:")
-            for folder, count in sorted(self.stats['by_folder'].items(),
-                                       key=lambda x: x[1], reverse=True):
+        if self.stats["by_folder"]:
+            print("\n📁 Emails moved by folder:")
+            for folder, count in sorted(
+                self.stats["by_folder"].items(), key=lambda x: x[1], reverse=True
+            ):
                 print(f"   {folder}: {count}")
 
 
 def main():
     """Main entry point"""
-    print("="*60)
+    print("=" * 60)
     print("Apply Sieve Filters Retroactively")
-    print("="*60)
+    print("=" * 60)
 
     # Check if sieve filter exists
     sieve_file = Path("output/generated.sieve")
@@ -292,7 +272,7 @@ def main():
         print("❌ Error: config/config.yml not found")
         sys.exit(1)
 
-    with open(config_file, 'r') as f:
+    with open(config_file, "r") as f:
         config = yaml.safe_load(f)
 
     # Parse Sieve filter
@@ -304,25 +284,25 @@ def main():
         sys.exit(1)
 
     # Show what will be done
-    print(f"\n📋 Filter rules to apply:")
+    print("\n📋 Filter rules to apply:")
     for i, rule in enumerate(rules, 1):
         print(f"   {i}. {rule['folder']} ({len(rule['conditions'])} conditions)")
 
     # Ask for confirmation
-    print(f"\n⚠️  WARNING: This will move existing emails in your INBOX")
-    print(f"   Source folder: INBOX")
+    print("\n⚠️  WARNING: This will move existing emails in your INBOX")
+    print("   Source folder: INBOX")
     print(f"   Target folders: {len(rules)} different folders")
     print(f"   Server: {config['imap']['server']}")
 
-    print(f"\n🔍 First, let's do a DRY RUN to see what would happen...")
+    print("\n🔍 First, let's do a DRY RUN to see what would happen...")
     response = input("   Run dry run? (Y/n): ").strip().lower()
 
-    if response == 'n':
+    if response == "n":
         print("❌ Cancelled")
         sys.exit(0)
 
     # Dry run
-    applicator = RetroactiveFilterApplicator(config['imap'], rules)
+    applicator = RetroactiveFilterApplicator(config["imap"], rules)
     try:
         applicator.connect()
         applicator.apply_filters(dry_run=True)
@@ -333,30 +313,30 @@ def main():
 
     # Ask if they want to proceed with actual move
     print(f"\n{'='*60}")
-    print(f"💡 Dry run complete. No emails were actually moved.")
+    print("💡 Dry run complete. No emails were actually moved.")
     print(f"{'='*60}")
 
     response = input("\n   Proceed with ACTUAL email moving? (yes/no): ").strip().lower()
 
-    if response != 'yes':
+    if response != "yes":
         print("❌ Cancelled. No emails were moved.")
         sys.exit(0)
 
     # Apply filters for real
-    print(f"\n🚀 Applying filters to existing emails...")
-    applicator = RetroactiveFilterApplicator(config['imap'], rules)
+    print("\n🚀 Applying filters to existing emails...")
+    applicator = RetroactiveFilterApplicator(config["imap"], rules)
     try:
         applicator.connect()
         applicator.apply_filters(dry_run=False)
 
         # Expunge deleted emails
-        print(f"\n🗑️  Expunging deleted emails from INBOX...")
+        print("\n🗑️  Expunging deleted emails from INBOX...")
         applicator.imap.expunge()
 
         applicator.disconnect()
 
-        print(f"\n✅ All done! Your existing emails have been organized.")
-        print(f"   Check your email client to see the results.")
+        print("\n✅ All done! Your existing emails have been organized.")
+        print("   Check your email client to see the results.")
 
     except Exception as e:
         print(f"\n❌ Error: {e}")

@@ -30,19 +30,16 @@ def main():
         sys.exit(1)
 
     # Setup logging
-    log_config = config_dict.get('logging', {})
-    setup_logging(
-        level=log_config.get('level', 'INFO'),
-        log_file=log_config.get('file')
-    )
+    log_config = config_dict.get("logging", {})
+    setup_logging(level=log_config.get("level", "INFO"), log_file=log_config.get("file"))
 
     logger.info("Starting MailCow AI Filter (Hexagonal Architecture)")
 
     # Check protocol
-    protocol = config_dict.get('protocol', 'imap').lower()
+    protocol = config_dict.get("protocol", "imap").lower()
     print(f"Protocol: {protocol.upper()}")
 
-    if protocol != 'imap':
+    if protocol != "imap":
         print()
         print("⚠️  Only IMAP is supported in this version")
         print("Please set protocol: 'imap' in config/config.yml")
@@ -62,11 +59,13 @@ def main():
         request = container.create_analyze_request()
 
         # Get output file path
-        sieve_config = config_dict.get('sieve', {})
-        output_file = sieve_config.get('output_file', '/app/output/generated.sieve')
+        sieve_config = config_dict.get("sieve", {})
+        output_file = sieve_config.get("output_file", "/app/output/generated.sieve")
 
-        logger.info(f"Starting analysis: max_emails={request.max_emails}, "
-                   f"exclude_folders={request.exclude_folders}")
+        logger.info(
+            f"Starting analysis: max_emails={request.max_emails}, "
+            f"exclude_folders={request.exclude_folders}"
+        )
 
         # Execute use case
         print("Fetching and analyzing emails...")
@@ -106,5 +105,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

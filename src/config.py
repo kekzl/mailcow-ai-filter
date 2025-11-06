@@ -33,7 +33,7 @@ class Config:
             )
 
         # Load YAML configuration
-        with open(self.config_path, 'r', encoding='utf-8') as f:
+        with open(self.config_path, "r", encoding="utf-8") as f:
             self.config: dict[str, Any] = yaml.safe_load(f) or {}
 
         # Override with environment variables if present
@@ -43,43 +43,45 @@ class Config:
         """Apply environment variable overrides to configuration."""
 
         # IMAP configuration
-        if os.getenv('MAIL_SERVER'):
-            self.config.setdefault('imap', {})
-            self.config['imap']['server'] = os.getenv('MAIL_SERVER')
+        if os.getenv("MAIL_SERVER"):
+            self.config.setdefault("imap", {})
+            self.config["imap"]["server"] = os.getenv("MAIL_SERVER")
 
-        if os.getenv('MAIL_USERNAME'):
-            self.config.setdefault('imap', {})
-            self.config['imap']['username'] = os.getenv('MAIL_USERNAME')
+        if os.getenv("MAIL_USERNAME"):
+            self.config.setdefault("imap", {})
+            self.config["imap"]["username"] = os.getenv("MAIL_USERNAME")
 
-        if os.getenv('MAIL_PASSWORD'):
-            self.config.setdefault('imap', {})
-            self.config['imap']['password'] = os.getenv('MAIL_PASSWORD')
+        if os.getenv("MAIL_PASSWORD"):
+            self.config.setdefault("imap", {})
+            self.config["imap"]["password"] = os.getenv("MAIL_PASSWORD")
 
-        if os.getenv('PROTOCOL'):
-            self.config['protocol'] = os.getenv('PROTOCOL')
+        if os.getenv("PROTOCOL"):
+            self.config["protocol"] = os.getenv("PROTOCOL")
 
         # AI configuration
-        if os.getenv('AI_PROVIDER'):
-            self.config.setdefault('ai', {})
-            self.config['ai']['provider'] = os.getenv('AI_PROVIDER')
+        if os.getenv("AI_PROVIDER"):
+            self.config.setdefault("ai", {})
+            self.config["ai"]["provider"] = os.getenv("AI_PROVIDER")
 
-        if os.getenv('AI_MODEL'):
-            self.config.setdefault('ai', {})
-            self.config['ai']['model'] = os.getenv('AI_MODEL')
+        if os.getenv("AI_MODEL"):
+            self.config.setdefault("ai", {})
+            self.config["ai"]["model"] = os.getenv("AI_MODEL")
 
-        if os.getenv('OLLAMA_BASE_URL'):
-            self.config.setdefault('ai', {})
-            self.config['ai']['base_url'] = os.getenv('OLLAMA_BASE_URL')
+        if os.getenv("OLLAMA_BASE_URL"):
+            self.config.setdefault("ai", {})
+            self.config["ai"]["base_url"] = os.getenv("OLLAMA_BASE_URL")
 
         # Analysis configuration
-        if os.getenv('MAX_EMAILS_TO_ANALYZE'):
-            self.config.setdefault('ai', {})
+        if os.getenv("MAX_EMAILS_TO_ANALYZE"):
+            self.config.setdefault("ai", {})
             try:
-                self.config['ai']['max_emails_to_analyze'] = int(os.getenv('MAX_EMAILS_TO_ANALYZE'))
+                self.config["ai"]["max_emails_to_analyze"] = int(
+                    os.getenv("MAX_EMAILS_TO_ANALYZE")
+                )
             except (ValueError, TypeError):
                 pass
 
         # Logging configuration
-        if os.getenv('LOG_LEVEL'):
-            self.config.setdefault('logging', {})
-            self.config['logging']['level'] = os.getenv('LOG_LEVEL')
+        if os.getenv("LOG_LEVEL"):
+            self.config.setdefault("logging", {})
+            self.config["logging"]["level"] = os.getenv("LOG_LEVEL")

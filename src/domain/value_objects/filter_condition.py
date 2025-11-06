@@ -6,23 +6,37 @@ from typing import Self
 
 # List of invalid/placeholder domains that should be rejected
 INVALID_DOMAINS = {
-    "example.com", "example.org", "example.net",
-    "test.com", "test.org", "test.net",
-    "unsorted.com", "random.com", "misc.com",
-    "placeholder.com", "dummy.com",
-    "localhost", "127.0.0.1",
+    "example.com",
+    "example.org",
+    "example.net",
+    "test.com",
+    "test.org",
+    "test.net",
+    "unsorted.com",
+    "random.com",
+    "misc.com",
+    "placeholder.com",
+    "dummy.com",
+    "localhost",
+    "127.0.0.1",
 }
 
 # List of overly generic domains that might cause false positives
 GENERIC_DOMAINS = {
-    "email.com", "mail.com", "app.com",
-    "security.com", "bank.com", "bank.de",
-    "shop.com", "store.com",
+    "email.com",
+    "mail.com",
+    "app.com",
+    "security.com",
+    "bank.com",
+    "bank.de",
+    "shop.com",
+    "store.com",
 }
 
 
 class ConditionType(Enum):
     """Types of filter conditions matching Sieve capabilities."""
+
     HEADER_CONTAINS = "header_contains"
     HEADER_IS = "header_is"
     ADDRESS_DOMAIN = "address_domain"
@@ -34,6 +48,7 @@ class ConditionType(Enum):
 
 class MatchType(Enum):
     """How to match the condition."""
+
     IS = ":is"
     CONTAINS = ":contains"
     MATCHES = ":matches"
@@ -70,7 +85,7 @@ class FilterCondition:
             condition_type=ConditionType.HEADER_CONTAINS,
             field=field,
             match_type=MatchType.CONTAINS,
-            value=value
+            value=value,
         )
 
     @classmethod
@@ -83,7 +98,7 @@ class FilterCondition:
             condition_type=ConditionType.ADDRESS_DOMAIN,
             field=field,
             match_type=MatchType.IS,
-            value=domain
+            value=domain,
         )
 
     @staticmethod
@@ -107,7 +122,7 @@ class FilterCondition:
             return False
 
         # Domain should have at least one dot (e.g., amazon.com)
-        if '.' not in domain_lower:
+        if "." not in domain_lower:
             return False
 
         # Domain should not be empty
@@ -127,7 +142,7 @@ class FilterCondition:
 
         if pattern.startswith("from:"):
             value = pattern[5:].strip()
-            if value.startswith('@'):
+            if value.startswith("@"):
                 # Domain pattern
                 return cls.address_domain_is("from", value[1:])
             else:
@@ -165,8 +180,8 @@ class FilterCondition:
         if pattern.startswith("subject:"):
             value = pattern[8:].strip()
             # Check if value contains commas (OR logic)
-            if ',' in value:
-                keywords = [kw.strip() for kw in value.split(',') if kw.strip()]
+            if "," in value:
+                keywords = [kw.strip() for kw in value.split(",") if kw.strip()]
                 return [cls.header_contains("subject", kw) for kw in keywords]
             else:
                 return [cls.header_contains("subject", value)]
@@ -183,7 +198,7 @@ class FilterCondition:
         elif self.condition_type == ConditionType.HEADER_IS:
             return f'header {self.match_type.value} "{self.field}" "{self.value}"'
         else:
-            return f'# Unsupported condition type: {self.condition_type}'
+            return f"# Unsupported condition type: {self.condition_type}"
 
     def __str__(self) -> str:
         return f"{self.field} {self.match_type.value} {self.value}"

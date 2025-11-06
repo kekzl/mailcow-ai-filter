@@ -7,13 +7,14 @@ from typing import Self
 
 class ActionType(Enum):
     """Types of actions that can be performed on emails."""
-    FILEINTO = "fileinto"        # Move to folder
-    REDIRECT = "redirect"        # Forward to address
-    DISCARD = "discard"          # Delete email
-    KEEP = "keep"                # Keep in inbox
-    STOP = "stop"                # Stop processing rules
-    SETFLAG = "setflag"          # Set IMAP flag
-    ADDFLAG = "addflag"          # Add IMAP flag
+
+    FILEINTO = "fileinto"  # Move to folder
+    REDIRECT = "redirect"  # Forward to address
+    DISCARD = "discard"  # Delete email
+    KEEP = "keep"  # Keep in inbox
+    STOP = "stop"  # Stop processing rules
+    SETFLAG = "setflag"  # Set IMAP flag
+    ADDFLAG = "addflag"  # Add IMAP flag
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,15 +64,15 @@ class FilterAction:
         elif self.action_type == ActionType.SETFLAG:
             return f'setflag "{self.parameter}";'
         elif self.action_type == ActionType.STOP:
-            return 'stop;'
+            return "stop;"
         elif self.action_type == ActionType.KEEP:
-            return 'keep;'
+            return "keep;"
         elif self.action_type == ActionType.DISCARD:
-            return 'discard;'
+            return "discard;"
         elif self.action_type == ActionType.REDIRECT:
             return f'redirect "{self.parameter}";'
         else:
-            return f'# Unsupported action: {self.action_type}'
+            return f"# Unsupported action: {self.action_type}"
 
     def __str__(self) -> str:
         if self.parameter:

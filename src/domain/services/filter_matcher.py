@@ -42,9 +42,7 @@ class FilterMatcher:
     - Generate test reports
     """
 
-    def test_filter(
-        self, sieve_filter: SieveFilter, emails: Sequence[Email]
-    ) -> FilterTestResult:
+    def test_filter(self, sieve_filter: SieveFilter, emails: Sequence[Email]) -> FilterTestResult:
         """Test a complete filter against email collection.
 
         Args:
@@ -132,7 +130,7 @@ class FilterMatcher:
             True if condition matches
         """
         # Import here to avoid circular dependency
-        from ..value_objects.filter_condition import ConditionType, MatchType
+        from ..value_objects.filter_condition import MatchType
 
         field_value = self._get_email_field_value(email, condition.field)
 
@@ -209,9 +207,7 @@ class FilterMatcher:
 
         return unmatched
 
-    def simulate_actions(
-        self, match_result: MatchResult
-    ) -> dict[str, str | bool]:
+    def simulate_actions(self, match_result: MatchResult) -> dict[str, str | bool]:
         """Simulate what would happen when filter actions are applied.
 
         Args:
@@ -266,9 +262,7 @@ class FilterMatcher:
             lines.append("Sample Matches:")
             lines.append("-" * 60)
             for i, match in enumerate(test_result.match_results[:5], 1):
-                lines.append(
-                    f"  {i}. [{match.rule.name}] {match.email.subject[:50]}"
-                )
+                lines.append(f"  {i}. [{match.rule.name}] {match.email.subject[:50]}")
 
         lines.append("=" * 60)
         return "\n".join(lines)

@@ -44,7 +44,10 @@ class OllamaAdapter(ILLMService):
         self.top_p = top_p
         self.session = requests.Session()
 
-        logger.info(f"Initialized Ollama adapter with model {model} (temp={temperature}, max_tokens={num_predict})")
+        logger.info(
+            f"Initialized Ollama adapter with model {model} "
+            f"(temp={temperature}, max_tokens={num_predict})"
+        )
         self._verify_ollama()
 
     def _verify_ollama(self) -> None:
@@ -52,8 +55,8 @@ class OllamaAdapter(ILLMService):
         try:
             response = self.session.get(f"{self.base_url}/api/tags")
             response.raise_for_status()
-            models = response.json().get('models', [])
-            model_names = [m['name'] for m in models]
+            models = response.json().get("models", [])
+            model_names = [m["name"] for m in models]
 
             if self.model not in model_names:
                 logger.warning(f"Model {self.model} not found. Available: {model_names}")
@@ -126,7 +129,9 @@ class OllamaAdapter(ILLMService):
             Exception: If analysis fails
             TimeoutError: If analysis times out
         """
-        logger.info(f"Analyzing {len(summaries)} email summaries with master model ({self.model})...")
+        logger.info(
+            f"Analyzing {len(summaries)} email summaries with master model ({self.model})..."
+        )
 
         # Prepare summary sample
         summary_sample = self._prepare_summary_sample(summaries, max_sample)
@@ -172,10 +177,14 @@ class OllamaAdapter(ILLMService):
             Exception: If analysis fails
             TimeoutError: If analysis times out
         """
-        logger.info(f"Analyzing {len(clusters)} email clusters with master model ({self.model})...")
+        logger.info(
+            f"Analyzing {len(clusters)} email clusters with master model ({self.model})..."
+        )
 
         # Create cluster analysis prompt
-        prompt = self._create_cluster_analysis_prompt(clusters, max_representatives, existing_folders)
+        prompt = self._create_cluster_analysis_prompt(
+            clusters, max_representatives, existing_folders
+        )
 
         try:
             # Call Ollama with master model
@@ -200,7 +209,7 @@ class OllamaAdapter(ILLMService):
         try:
             response = self.session.get(f"{self.base_url}/api/tags", timeout=5)
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
     def get_model_info(self) -> dict[str, str]:
@@ -212,22 +221,22 @@ class OllamaAdapter(ILLMService):
         try:
             response = self.session.get(f"{self.base_url}/api/tags")
             if response.status_code == 200:
-                models = response.json().get('models', [])
+                models = response.json().get("models", [])
                 for model in models:
-                    if model['name'] == self.model:
+                    if model["name"] == self.model:
                         return {
-                            'provider': 'ollama',
-                            'model': self.model,
-                            'size': model.get('size', 'unknown'),
-                            'modified': model.get('modified_at', 'unknown'),
+                            "provider": "ollama",
+                            "model": self.model,
+                            "size": model.get("size", "unknown"),
+                            "modified": model.get("modified_at", "unknown"),
                         }
-        except:
+        except Exception:
             pass
 
         return {
-            'provider': 'ollama',
-            'model': self.model,
-            'status': 'unknown',
+            "provider": "ollama",
+            "model": self.model,
+            "status": "unknown",
         }
 
     def _call_ollama(self, prompt: str) -> str:
@@ -255,19 +264,17 @@ class OllamaAdapter(ILLMService):
                     "temperature": self.temperature,
                     "num_predict": self.num_predict,
                     "top_p": self.top_p,
-                }
+                },
             },
-            timeout=600  # 10 minutes for local models
+            timeout=600,  # 10 minutes for local models
         )
         response.raise_for_status()
 
         result = response.json()
-        return result.get('response', '')
+        return result.get("response", "")
 
     def _prepare_summary_sample(
-        self,
-        summaries: Sequence[EmailSummary],
-        max_sample: int = 100
+        self, summaries: Sequence[EmailSummary], max_sample: int = 100
     ) -> list[dict[str, Any]]:
         """Prepare summary sample for master AI analysis.
 
@@ -286,7 +293,7 @@ class OllamaAdapter(ILLMService):
     def _create_master_analysis_prompt(
         self,
         summary_sample: list[dict[str, Any]],
-        existing_folders: dict[str, int] | None = None
+        existing_folders: dict[str, int] | None = None,
     ) -> str:
         """Create prompt for master AI analysis of email summaries.
 
@@ -309,7 +316,9 @@ EXISTING FOLDER STRUCTURE:
 The user already has {len(existing_folders)} folders set up. Consider this when creating new suggestions:
 
 """
-            for folder_name, count in sorted(existing_folders.items(), key=lambda x: x[1], reverse=True):
+            for folder_name, count in sorted(
+                existing_folders.items(), key=lambda x: x[1], reverse=True
+            ):
                 prompt += f"- {folder_name} ({count} emails)\n"
 
             prompt += """
@@ -464,7 +473,9 @@ EXISTING FOLDER STRUCTURE:
 The user already has {len(existing_folders)} folders set up. Consider this when creating new suggestions:
 
 """
-            for folder_name, count in sorted(existing_folders.items(), key=lambda x: x[1], reverse=True):
+            for folder_name, count in sorted(
+                existing_folders.items(), key=lambda x: x[1], reverse=True
+            ):
                 prompt += f"- {folder_name} ({count} emails)\n"
 
             prompt += """
@@ -488,7 +499,9 @@ Cluster {i} ({cluster.size} emails):
             representatives = cluster.representative_emails[:max_representatives]
             for j, email in enumerate(representatives, 1):
                 # Extract domain from email sender
-                sender_domain = email.sender.value.split('@')[-1] if '@' in email.sender.value else 'unknown'
+                sender_domain = (
+                    email.sender.value.split("@")[-1] if "@" in email.sender.value else "unknown"
+                )
                 prompt += f"""  Email {j}:
   - From: {sender_domain}
   - Subject: {email.subject[:80]}
@@ -509,7 +522,8 @@ CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE EXACTLY:
    - Different email types from same sender (Orders vs Shipping vs Returns)
    - Different purposes (Receipts vs Invoices vs Notifications)
 5. DO NOT over-consolidate - if 2 clusters have different senders or purposes, create separate subcategories
-6. Group related subcategories under parent categories (e.g., "Work/GitHub", "Work/GitLab", "Shopping/Amazon-Orders", "Shopping/Amazon-Shipping")
+6. Group related subcategories under parent categories
+   (e.g., "Work/GitHub", "Work/GitLab", "Shopping/Amazon-Orders", "Shopping/Amazon-Shipping")
 
 IMPORTANT: If you create fewer than {max(10, min(len(clusters)//2, 25))} subcategories, your response will be REJECTED.
 
@@ -672,9 +686,7 @@ IMPORTANT:
         return prompt
 
     def _prepare_email_sample(
-        self,
-        emails: Sequence[Email],
-        max_sample: int = 20
+        self, emails: Sequence[Email], max_sample: int = 20
     ) -> list[dict[str, str]]:
         """Prepare email sample for AI analysis.
 
@@ -687,12 +699,14 @@ IMPORTANT:
         """
         sample = []
         for email in list(emails)[:max_sample]:
-            sample.append({
-                'from': email.sender.value,
-                'subject': email.subject,
-                'folder': email.folder,
-                'body_preview': email.body[:100] if email.body else ""
-            })
+            sample.append(
+                {
+                    "from": email.sender.value,
+                    "subject": email.subject,
+                    "folder": email.folder,
+                    "body_preview": email.body[:100] if email.body else "",
+                }
+            )
         return sample
 
     def _create_analysis_prompt(self, email_sample: list[dict[str, str]]) -> str:
@@ -720,7 +734,8 @@ Email {i}:
 
         prompt += """
 
-Analyze these emails and group them into broad categories like "Shopping", "Finance", "Social Media", "Work", or "Newsletters".
+Analyze these emails and group them into broad categories like
+"Shopping", "Finance", "Social Media", "Work", or "Newsletters".
 
 Rules:
 1. Create GENERAL categories, NOT brand-specific (e.g., "Shopping" not "Amazon Orders")
@@ -772,28 +787,30 @@ IMPORTANT:
         logger.debug(f"AI Response (first 500 chars): {response_text[:500]}")
 
         # Strip out <think>...</think> blocks (chain-of-thought reasoning)
-        cleaned_text = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL | re.IGNORECASE)
+        cleaned_text = re.sub(
+            r"<think>.*?</think>", "", response_text, flags=re.DOTALL | re.IGNORECASE
+        )
 
         # Also try to get content after </think> if it exists
-        if '<think>' in response_text.lower():
-            after_think = re.split(r'</think>', response_text, flags=re.IGNORECASE)
+        if "<think>" in response_text.lower():
+            after_think = re.split(r"</think>", response_text, flags=re.IGNORECASE)
             if len(after_think) > 1:
                 cleaned_text = after_think[-1]  # Get everything after last </think>
 
         # Extract JSON from response
-        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', cleaned_text, re.DOTALL)
+        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL)
         if json_match:
             json_str = json_match.group(1)
         else:
             # Try to find JSON without code blocks
-            json_match = re.search(r'(\{.*\})', cleaned_text, re.DOTALL)
+            json_match = re.search(r"(\{.*\})", cleaned_text, re.DOTALL)
             if json_match:
                 json_str = json_match.group(1)
             else:
                 # Save full response for debugging
-                debug_file = '/app/output/failed_ai_response_full.txt'
+                debug_file = "/app/output/failed_ai_response_full.txt"
                 try:
-                    with open(debug_file, 'w') as f:
+                    with open(debug_file, "w") as f:
                         f.write("=== FULL AI RESPONSE (No JSON Found) ===\n\n")
                         f.write(response_text)
                     logger.error(f"Saved full AI response to {debug_file}")
@@ -804,7 +821,7 @@ IMPORTANT:
         # Try to parse JSON with multiple strategies
         result = self._parse_json_with_fixes(json_str)
 
-        if 'categories' not in result:
+        if "categories" not in result:
             raise ValueError("Response missing 'categories' field")
 
         return result
@@ -831,8 +848,8 @@ IMPORTANT:
         # Strategy 1.5: Replace Unicode quotes
         try:
             # Replace German/fancy quotes with standard ASCII quotes
-            fixed_json = json_str.replace('„', '').replace('"', '').replace('"', '')
-            fixed_json = fixed_json.replace(''', "'").replace(''', "'")
+            fixed_json = json_str.replace("„", "").replace('"', "").replace('"', "")
+            fixed_json = fixed_json.replace(""", "'").replace(""", "'")
             result = json.loads(fixed_json)
             logger.info("Successfully parsed JSON after replacing Unicode quotes")
             return result
@@ -841,8 +858,8 @@ IMPORTANT:
 
         # Strategy 2: Fix trailing commas
         try:
-            fixed_json = re.sub(r',\s*}', '}', json_str)  # Remove trailing commas before }
-            fixed_json = re.sub(r',\s*]', ']', fixed_json)  # Remove trailing commas before ]
+            fixed_json = re.sub(r",\s*}", "}", json_str)  # Remove trailing commas before }
+            fixed_json = re.sub(r",\s*]", "]", fixed_json)  # Remove trailing commas before ]
             result = json.loads(fixed_json)
             logger.info("Successfully parsed JSON after fixing trailing commas")
             return result
@@ -851,7 +868,7 @@ IMPORTANT:
 
         # Strategy 3: Fix missing commas between array elements
         try:
-            fixed_json = re.sub(r'\}\s*\{', '},{', json_str)  # Add comma between objects
+            fixed_json = re.sub(r"\}\s*\{", "},{", json_str)  # Add comma between objects
             fixed_json = re.sub(r'"\s*"', '","', fixed_json)  # Add comma between strings
             result = json.loads(fixed_json)
             logger.info("Successfully parsed JSON after fixing missing commas")
@@ -863,10 +880,10 @@ IMPORTANT:
         try:
             categories_match = re.search(r'"categories"\s*:\s*\[(.*?)\]', json_str, re.DOTALL)
             if categories_match:
-                categories_str = '[' + categories_match.group(1) + ']'
+                categories_str = "[" + categories_match.group(1) + "]"
                 # Try to fix and parse categories array
-                categories_str = re.sub(r',\s*]', ']', categories_str)
-                categories_str = re.sub(r'\}\s*\{', '},{', categories_str)
+                categories_str = re.sub(r",\s*]", "]", categories_str)
+                categories_str = re.sub(r"\}\s*\{", "},{", categories_str)
                 categories = json.loads(categories_str)
                 logger.info("Successfully extracted and parsed categories array")
                 return {"categories": categories}
@@ -874,14 +891,18 @@ IMPORTANT:
             pass
 
         # Strategy 5: Save failed response for debugging and raise error
-        debug_file = '/app/output/failed_ai_response.txt'
+        debug_file = "/app/output/failed_ai_response.txt"
         try:
-            with open(debug_file, 'w') as f:
+            with open(debug_file, "w") as f:
                 f.write("=== FAILED AI RESPONSE ===\n\n")
                 f.write(json_str)
             logger.error(f"Saved failed AI response to {debug_file}")
         except Exception:
             pass
 
-        logger.error(f"All JSON parsing strategies failed. JSON (first 1000 chars): {json_str[:1000]}")
-        raise ValueError(f"Could not parse JSON after trying multiple fixes. Check {debug_file} for details")
+        logger.error(
+            f"All JSON parsing strategies failed. JSON (first 1000 chars): {json_str[:1000]}"
+        )
+        raise ValueError(
+            f"Could not parse JSON after trying multiple fixes. Check {debug_file} for details"
+        )

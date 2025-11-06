@@ -105,25 +105,25 @@ class IMAPAdapter(IEmailFetcher):
         try:
             # Select folder
             status, _ = self.connection.select(f'"{folder}"', readonly=True)
-            if status != 'OK':
+            if status != "OK":
                 raise Exception(f"Failed to select folder {folder}")
 
             # Build search criteria
             if since_date:
                 date_str = since_date.strftime("%d-%b-%Y")
-                search_criteria = f'SINCE {date_str}'
+                search_criteria = f"SINCE {date_str}"
             else:
                 # Default to last 12 months
                 cutoff_date = datetime.now() - timedelta(days=365)
                 date_str = cutoff_date.strftime("%d-%b-%Y")
-                search_criteria = f'SINCE {date_str}'
+                search_criteria = f"SINCE {date_str}"
 
             # Search for emails
             status, message_ids = self.connection.search(None, search_criteria)
-            if status != 'OK':
+            if status != "OK":
                 logger.warning("Date search failed, falling back to ALL")
-                status, message_ids = self.connection.search(None, 'ALL')
-                if status != 'OK':
+                status, message_ids = self.connection.search(None, "ALL")
+                if status != "OK":
                     return []
 
             id_list = message_ids[0].split()
@@ -159,12 +159,14 @@ class IMAPAdapter(IEmailFetcher):
 
         try:
             status, folder_list = self.connection.list()
-            if status != 'OK':
+            if status != "OK":
                 return []
 
             folders = []
             for folder_data in folder_list:
-                folder_str = folder_data.decode() if isinstance(folder_data, bytes) else folder_data
+                folder_str = (
+                    folder_data.decode() if isinstance(folder_data, bytes) else folder_data
+                )
                 parts = folder_str.split('"')
 
                 if len(parts) >= 3:
@@ -193,7 +195,7 @@ class IMAPAdapter(IEmailFetcher):
 
         try:
             status, messages = self.connection.select(f'"{folder}"', readonly=True)
-            if status == 'OK':
+            if status == "OK":
                 count = int(messages[0].decode())
                 return count
             return 0
@@ -212,22 +214,22 @@ class IMAPAdapter(IEmailFetcher):
             Email entity or None
         """
         try:
-            status, msg_data = self.connection.fetch(msg_id, '(RFC822)')
-            if status != 'OK':
+            status, msg_data = self.connection.fetch(msg_id, "(RFC822)")
+            if status != "OK":
                 return None
 
             raw_email = msg_data[0][1]
             email_message = email.message_from_bytes(raw_email)
 
             # Extract headers
-            subject = self._decode_header(email_message.get('Subject', ''))
-            from_addr = self._decode_header(email_message.get('From', ''))
-            date_str = email_message.get('Date', '')
+            subject = self._decode_header(email_message.get("Subject", ""))
+            from_addr = self._decode_header(email_message.get("From", ""))
+            date_str = email_message.get("Date", "")
 
             # Parse date
             try:
                 date = email.utils.parsedate_to_datetime(date_str)
-            except:
+            except Exception:
                 date = datetime.now()
 
             # Extract body
@@ -235,26 +237,26 @@ class IMAPAdapter(IEmailFetcher):
 
             # Create EmailAddress value object
             # Extract email from "Name <email@domain.com>" format
-            if '<' in from_addr and '>' in from_addr:
-                email_addr = from_addr[from_addr.find('<')+1:from_addr.find('>')]
+            if "<" in from_addr and ">" in from_addr:
+                email_addr = from_addr[from_addr.find("<") + 1 : from_addr.find(">")]
             else:
                 email_addr = from_addr
 
             try:
-                sender = EmailAddress(email_addr)
+                EmailAddress(email_addr)
             except ValueError:
                 logger.warning(f"Invalid email address: {email_addr}, skipping")
                 return None
 
             # Extract recipients (To header)
-            to_header = self._decode_header(email_message.get('To', ''))
+            to_header = self._decode_header(email_message.get("To", ""))
             recipients = []
             if to_header:
                 # Simple parsing - split by comma
-                recipient_list = [r.strip() for r in to_header.split(',')]
+                recipient_list = [r.strip() for r in to_header.split(",")]
                 for recipient in recipient_list:
-                    if '<' in recipient and '>' in recipient:
-                        recipient_addr = recipient[recipient.find('<')+1:recipient.find('>')]
+                    if "<" in recipient and ">" in recipient:
+                        recipient_addr = recipient[recipient.find("<") + 1 : recipient.find(">")]
                     else:
                         recipient_addr = recipient
                     if recipient_addr:
@@ -284,7 +286,7 @@ class IMAPAdapter(IEmailFetcher):
             Decoded string
         """
         if not header_value:
-            return ''
+            return ""
 
         decoded_parts = decode_header(header_value)
         result = []
@@ -294,14 +296,14 @@ class IMAPAdapter(IEmailFetcher):
                 if encoding:
                     try:
                         result.append(part.decode(encoding))
-                    except:
-                        result.append(part.decode('utf-8', errors='ignore'))
+                    except Exception:
+                        result.append(part.decode("utf-8", errors="ignore"))
                 else:
-                    result.append(part.decode('utf-8', errors='ignore'))
+                    result.append(part.decode("utf-8", errors="ignore"))
             else:
                 result.append(str(part))
 
-        return ' '.join(result)
+        return " ".join(result)
 
     def _extract_body(self, email_message) -> str:
         """Extract body text from email message.
@@ -312,25 +314,25 @@ class IMAPAdapter(IEmailFetcher):
         Returns:
             Body text
         """
-        body = ''
+        body = ""
 
         if email_message.is_multipart():
             for part in email_message.walk():
                 content_type = part.get_content_type()
-                if content_type == 'text/plain':
+                if content_type == "text/plain":
                     try:
                         payload = part.get_payload(decode=True)
                         if payload:
-                            body = payload.decode('utf-8', errors='ignore')
+                            body = payload.decode("utf-8", errors="ignore")
                             break
-                    except:
+                    except Exception:
                         continue
         else:
             try:
                 payload = email_message.get_payload(decode=True)
                 if payload:
-                    body = payload.decode('utf-8', errors='ignore')
-            except:
-                body = ''
+                    body = payload.decode("utf-8", errors="ignore")
+            except Exception:
+                body = ""
 
         return body[:500]  # Limit body length

@@ -87,20 +87,20 @@ class AnalyzeEmailsUseCase:
 
     def execute(self, request: AnalyzeEmailsRequest) -> AnalyzeEmailsResponse:
         """Execute the email analysis workflow.
-        
+
         Args:
             request: Analysis request parameters
-            
+
         Returns:
             Analysis response with generated filter
-            
+
         Raises:
             ValueError: If request is invalid
             ConnectionError: If email server connection fails
             Exception: For other errors during execution
         """
         start_time = time.time()
-        
+
         logger.info(
             f"Starting email analysis: max_emails={request.max_emails}, "
             f"exclude_folders={request.exclude_folders}"
@@ -128,9 +128,9 @@ class AnalyzeEmailsUseCase:
                 max_emails=request.max_emails,
                 exclude_folders=request.exclude_folders,
             )
-            
+
             logger.info(f"Fetched {len(emails)} emails")
-            
+
             if not emails:
                 raise ValueError("No emails found to analyze")
 
@@ -194,13 +194,9 @@ class AnalyzeEmailsUseCase:
 
             # Step 3: Generate filter from AI analysis
             logger.info("Generating Sieve filter from patterns...")
-            sieve_filter = self.filter_generator.generate_filter_from_raw_response(
-                ai_response
-            )
+            sieve_filter = self.filter_generator.generate_filter_from_raw_response(ai_response)
 
-            logger.info(
-                f"Generated filter with {len(sieve_filter.rules)} rules"
-            )
+            logger.info(f"Generated filter with {len(sieve_filter.rules)} rules")
 
             # Step 3.5: Validate generated filter
             logger.info("Validating generated filter...")
@@ -223,15 +219,15 @@ class AnalyzeEmailsUseCase:
 
             # Step 4: Save filter (if output path provided)
             output_path = None
-            if hasattr(request, 'output_file'):
+            if hasattr(request, "output_file"):
                 output_path = self.filter_repository.save(
-                    sieve_filter, 
-                    getattr(request, 'output_file', '/app/output/generated.sieve')
+                    sieve_filter,
+                    getattr(request, "output_file", "/app/output/generated.sieve"),
                 )
                 logger.info(f"Saved filter to {output_path}")
 
             analysis_time = time.time() - start_time
-            
+
             return AnalyzeEmailsResponse(
                 sieve_filter=sieve_filter,
                 total_emails_analyzed=len(emails),
@@ -242,9 +238,7 @@ class AnalyzeEmailsUseCase:
 
         finally:
             self.email_fetcher.disconnect()
-            logger.info(
-                f"Email analysis completed in {time.time() - start_time:.2f}s"
-            )
+            logger.info(f"Email analysis completed in {time.time() - start_time:.2f}s")
 
     def _fetch_folder_structure(self) -> dict[str, int]:
         """Fetch existing folder structure from email server.
@@ -282,11 +276,11 @@ class AnalyzeEmailsUseCase:
             # Import here to make it optional
             from src.infrastructure.adapters.managesieve_adapter import (
                 ManageSieveAdapter,
-                SieveFilterExtractor
+                SieveFilterExtractor,
             )
 
             # Get IMAP config (reuse for ManageSieve)
-            if not hasattr(self.email_fetcher, 'server'):
+            if not hasattr(self.email_fetcher, "server"):
                 return None
 
             server = self.email_fetcher.server
