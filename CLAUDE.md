@@ -6,6 +6,26 @@ This document explains how MailCow AI Filter uses Anthropic's Claude AI to analy
 
 Claude AI powers the email pattern analysis in this project. It examines your emails and identifies natural categories, patterns, and filtering rules without any manual configuration.
 
+**Note:** This project also supports **free local LLMs via Ollama**. See [LOCAL_MODELS.md](LOCAL_MODELS.md) for a completely free, privacy-first alternative to Claude API.
+
+## Claude vs Ollama (Local LLMs)
+
+| Feature | Claude API | Ollama (Local) |
+|---------|-----------|----------------|
+| **Cost** | ~$0.12 per run | $0 (free) |
+| **Privacy** | Data sent to Anthropic | 100% offline |
+| **Speed** | Fast (cloud) | Slower (depends on hardware) |
+| **Quality** | Excellent | Very good (with qwen2.5-coder:14b) |
+| **Setup** | API key only | Install Ollama + download model |
+| **Requirements** | Internet | 16GB RAM, GPU recommended |
+
+**Recommendation:**
+- **Use Claude** if you want the best quality and don't mind ~$0.12 per run
+- **Use Ollama** if you want 100% privacy, no ongoing costs, and have capable hardware
+
+**Switching between them:**
+Just change `provider: "anthropic"` to `provider: "ollama"` in your `config/config.yml` file.
+
 ## How It Works
 
 ### 1. Email Sampling
@@ -272,21 +292,31 @@ anthropic.PermissionDeniedError: Insufficient credits
 
 ## Advanced: Custom Prompts
 
-If you want to customize how Claude analyzes your emails, edit `src/ai_analyzer.py`:
+If you want to customize how Claude analyzes your emails, edit the prompt in:
+- **Anthropic adapter**: `src/infrastructure/adapters/anthropic_adapter.py`
+- **Ollama adapter**: `src/infrastructure/adapters/ollama_adapter.py`
+
+Example customization in `anthropic_adapter.py`:
 
 ```python
-def _create_analysis_prompt(self, email_sample, existing_folders):
+def _create_analysis_prompt(self, email_sample, existing_filters=None):
+    # Add custom focus areas
     prompt = f"""Analyze these emails and focus on:
 
-    1. Newsletter detection
+    1. Newsletter detection (unsubscribe links)
     2. Work vs personal separation
     3. Priority/urgency indicators
+    4. Automated vs human-sent emails
+
+    Existing filters: {existing_filters}
 
     Emails:
     {email_sample}
     """
     return prompt
 ```
+
+**Note:** The project uses hexagonal architecture, so AI providers are in `src/infrastructure/adapters/`.
 
 ## Example Analysis Output
 
@@ -366,8 +396,9 @@ Claude's typical response structure:
 
 ### Project Issues
 - Check `logs/ai-filter.log`
-- Review configuration
-- Open GitHub issue
+- Review configuration in `config/config.yml`
+- [Open GitHub Issue](https://github.com/kekzl/mailcow-ai-filter/issues)
+- [GitHub Discussions](https://github.com/kekzl/mailcow-ai-filter/discussions)
 
 ## Further Reading
 
