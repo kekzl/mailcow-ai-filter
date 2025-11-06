@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-01-07
+
+### Improved
+- 🔧 **Code Quality Improvements** - Achieved 0 flake8 findings
+  - Formatted all Python files with black (line-length=99)
+  - Organized imports with isort (--profile black)
+  - Fixed bare except clauses: use `except Exception:` instead
+  - Removed unused imports and fixed f-strings
+  - Split long lines to comply with 120 char limit
+  - Added `.flake8` configuration file
+  - Added `requirements-dev.txt` with code quality tools
+
+### Fixed
+- Corrected all bare exception handlers (E722)
+- Removed all unused imports (F401)
+- Fixed f-strings without placeholders (F541)
+
+### Developer Experience
+- Added development dependencies: black, isort, flake8, mypy, bandit
+- Established consistent code style across entire codebase
+- Type stubs for better IDE support
+
+---
+
 ## [1.1.0] - 2025-01-07
 
 ### Added
