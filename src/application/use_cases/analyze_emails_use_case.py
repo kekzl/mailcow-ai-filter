@@ -14,6 +14,7 @@ from src.application.ports.i_embedding_service import IEmbeddingService
 from src.application.ports.i_filter_repository import IFilterRepository
 from src.application.ports.i_llm_service import ILLMService
 from src.domain.services.filter_generator import FilterGenerator
+from src.domain.services.filter_validator import FilterValidator
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class AnalyzeEmailsUseCase:
         self.llm_service = llm_service
         self.filter_repository = filter_repository
         self.filter_generator = filter_generator
+        self.filter_validator = FilterValidator()
         self.email_summarizer = email_summarizer
         self.max_parallel_workers = max_parallel_workers
         self.embedding_service = embedding_service
@@ -104,7 +106,7 @@ class AnalyzeEmailsUseCase:
             f"exclude_folders={request.exclude_folders}"
         )
 
-        # Step 1: Fetch existing folder structure
+        # Step 1: Fetch existing folder structure and filters
         logger.info("Fetching existing folder structure from server...")
         self.email_fetcher.connect()
 
@@ -112,6 +114,11 @@ class AnalyzeEmailsUseCase:
             # Get existing folders and their email counts
             existing_folders = self._fetch_folder_structure()
             logger.info(f"Found {len(existing_folders)} existing folders")
+
+            # Try to fetch existing Sieve filters (optional)
+            existing_filters_summary = self._fetch_existing_filters()
+            if existing_filters_summary:
+                logger.info("Retrieved existing Sieve filters for analysis")
 
             # Step 2: Fetch emails
             logger.info("Fetching emails from server...")
@@ -190,10 +197,29 @@ class AnalyzeEmailsUseCase:
             sieve_filter = self.filter_generator.generate_filter_from_raw_response(
                 ai_response
             )
-            
+
             logger.info(
                 f"Generated filter with {len(sieve_filter.rules)} rules"
             )
+
+            # Step 3.5: Validate generated filter
+            logger.info("Validating generated filter...")
+            validation_issues = self.filter_validator.validate_filter(sieve_filter)
+
+            if validation_issues:
+                validation_report = self.filter_validator.format_issues_report(validation_issues)
+                logger.warning(f"Filter validation found issues:\n{validation_report}")
+
+                # Count errors vs warnings
+                errors = [i for i in validation_issues if i.severity == "error"]
+                warnings = [i for i in validation_issues if i.severity == "warning"]
+
+                if errors:
+                    logger.error(f"Filter has {len(errors)} validation errors!")
+                if warnings:
+                    logger.warning(f"Filter has {len(warnings)} validation warnings")
+            else:
+                logger.info("✅ Filter validation passed with no issues")
 
             # Step 4: Save filter (if output path provided)
             output_path = None
@@ -245,3 +271,52 @@ class AnalyzeEmailsUseCase:
             logger.warning(f"Failed to fetch folder structure: {e}")
 
         return folder_structure
+
+    def _fetch_existing_filters(self) -> str | None:
+        """Fetch existing Sieve filters from server (optional).
+
+        Returns:
+            Summary of existing filters or None
+        """
+        try:
+            # Import here to make it optional
+            from src.infrastructure.adapters.managesieve_adapter import (
+                ManageSieveAdapter,
+                SieveFilterExtractor
+            )
+
+            # Get IMAP config (reuse for ManageSieve)
+            if not hasattr(self.email_fetcher, 'server'):
+                return None
+
+            server = self.email_fetcher.server
+            username = self.email_fetcher.username
+            password = self.email_fetcher.password
+
+            # Try to connect to ManageSieve
+            try:
+                sieve_adapter = ManageSieveAdapter(server, username, password)
+                sieve_adapter.connect()
+
+                # Get active script
+                active_script = sieve_adapter.get_active_script()
+                sieve_adapter.disconnect()
+
+                if active_script:
+                    # Extract and summarize filters
+                    filters = SieveFilterExtractor.extract_existing_filters(active_script)
+                    summary = SieveFilterExtractor.summarize_existing_filters(filters)
+                    return summary
+
+            except Exception as e:
+                logger.debug(f"ManageSieve not available: {e}")
+                return None
+
+        except ImportError:
+            logger.debug("managesieve library not installed, skipping filter fetch")
+            return None
+        except Exception as e:
+            logger.debug(f"Could not fetch existing filters: {e}")
+            return None
+
+        return None

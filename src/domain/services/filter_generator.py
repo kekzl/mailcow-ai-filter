@@ -72,20 +72,26 @@ class FilterGenerator:
                 f"No categories meet minimum confidence threshold of {self.min_confidence}"
             )
 
+        # Sort categories by priority (security > finance > work > social > promotions)
+        sorted_categories = sorted(valid_categories, key=self._get_category_priority)
+
         rules = []
-        for category in valid_categories:
+        for category in sorted_categories:
             # Process category itself if it has patterns
             rule = self._create_rule_from_category(category)
             if rule:
                 rules.append(rule)
 
-            # Process subcategories recursively
+            # Process subcategories recursively (also sorted by priority)
             if category.subcategories:
-                for subcat in category.subcategories:
-                    if subcat.confidence >= self.min_confidence:
-                        sub_rule = self._create_rule_from_category(subcat)
-                        if sub_rule:
-                            rules.append(sub_rule)
+                sorted_subcats = sorted(
+                    [sc for sc in category.subcategories if sc.confidence >= self.min_confidence],
+                    key=self._get_category_priority
+                )
+                for subcat in sorted_subcats:
+                    sub_rule = self._create_rule_from_category(subcat)
+                    if sub_rule:
+                        rules.append(sub_rule)
 
         if not rules:
             raise ValueError("Failed to generate any valid rules from categories")
@@ -95,6 +101,61 @@ class FilterGenerator:
             description=f"Automatically generated filters for {len(rules)} categories",
             rules=rules,
         )
+
+    def _get_category_priority(self, category: CategoryPattern) -> int:
+        """Determine priority of a category (lower number = higher priority).
+
+        Priority order:
+        1. Security/Alerts (0-9)
+        2. Finance/Banking (10-19)
+        3. Work/Professional (20-29)
+        4. Shopping/Orders (30-39)
+        5. Social Media (40-49)
+        6. Newsletters/Promotions (50-59)
+        7. Others (60+)
+
+        Args:
+            category: Category to prioritize
+
+        Returns:
+            Priority number (lower = higher priority)
+        """
+        name_lower = category.name.lower()
+        desc_lower = category.description.lower()
+        combined = f"{name_lower} {desc_lower}"
+
+        # Security/Alerts - highest priority
+        security_keywords = ['security', 'alert', 'warning', 'critical', 'urgent', 'notification']
+        if any(kw in combined for kw in security_keywords):
+            return 0
+
+        # Finance/Banking
+        finance_keywords = ['finance', 'bank', 'payment', 'invoice', 'receipt', 'bill', 'paypal', 'stripe']
+        if any(kw in combined for kw in finance_keywords):
+            return 10
+
+        # Work/Professional
+        work_keywords = ['work', 'github', 'gitlab', 'ci/cd', 'ci-cd', 'code', 'deploy', 'meeting', 'slack']
+        if any(kw in combined for kw in work_keywords):
+            return 20
+
+        # Shopping/Orders
+        shopping_keywords = ['shop', 'order', 'shipping', 'delivery', 'amazon', 'ebay', 'purchase']
+        if any(kw in combined for kw in shopping_keywords):
+            return 30
+
+        # Social Media
+        social_keywords = ['social', 'facebook', 'twitter', 'linkedin', 'instagram', 'message']
+        if any(kw in combined for kw in social_keywords):
+            return 40
+
+        # Newsletters/Promotions
+        promo_keywords = ['newsletter', 'promotion', 'marketing', 'ad', 'offer', 'subscribe']
+        if any(kw in combined for kw in promo_keywords):
+            return 50
+
+        # Others (lowest priority)
+        return 60
 
     def _create_rule_from_category(self, category: CategoryPattern) -> FilterRule | None:
         """Create a single filter rule from a category pattern.
@@ -109,11 +170,13 @@ class FilterGenerator:
             return None
 
         # Convert pattern strings to FilterCondition objects
+        # Use from_pattern_multi() to properly handle comma-separated keywords
         conditions = []
         for pattern in category.patterns:
             try:
-                condition = FilterCondition.from_pattern(pattern)
-                conditions.append(condition)
+                # from_pattern_multi() returns a list (may be single or multiple conditions)
+                pattern_conditions = FilterCondition.from_pattern_multi(pattern)
+                conditions.extend(pattern_conditions)
             except ValueError:
                 # Skip invalid patterns
                 continue
@@ -127,11 +190,16 @@ class FilterGenerator:
             FilterAction.stop(),
         ]
 
+        # Use 'anyof' (OR) logic when multiple conditions are present
+        # This ensures "subject:order,bestellt" becomes (order OR bestellt)
+        logical_operator = "anyof" if len(conditions) > 1 else "anyof"
+
         return FilterRule.create(
             name=category.name,
             description=category.description,
             conditions=conditions,
             actions=actions,
+            logical_operator=logical_operator,
         )
 
     def generate_filter_from_raw_response(

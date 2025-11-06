@@ -64,6 +64,9 @@ output/*.txt
 logs/*.log
 logs/
 
+# Cache directories
+.cache/
+
 # IDE
 .vscode/
 .idea/

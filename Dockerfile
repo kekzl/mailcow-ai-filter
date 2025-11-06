@@ -17,6 +17,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY config/ ./config/
 
+# Copy utility scripts
+COPY fetch_existing_filters.py .
+COPY create_folders.py .
+COPY upload_filter_api.py .
+
 # Create output directory for generated rules
 RUN mkdir -p /app/output
 

@@ -352,13 +352,20 @@ Requirements:
 2. Each top-level category SHOULD have SUBCATEGORIES where appropriate (e.g., "Work/GitHub", "Work/Slack")
 3. Use GENERAL patterns, NOT brand-specific for categories (but you can use brand domains in patterns)
 4. Pattern format:
-   - "from:@domain.com" for sender domains
+   - "from:@domain.com" for sender domains (e.g., "from:@github.com", "from:@amazon.de")
    - "from:email@domain.com" for specific senders
-   - "subject:keyword" for subject keywords
-   - "subject:word1,word2" for multiple keywords (OR logic)
-   - "subject:word1 word2" for phrase matching
+   - "subject:keyword" for subject keywords (single keyword)
+   - "subject:word1,word2,word3" for multiple keywords (OR logic - matches ANY of these words)
+   - "subject:word1 word2" for exact phrase matching
 5. Create DETAILED pattern matching rules with multiple conditions where appropriate
 6. Include 2-4 example subjects per category to show what emails match
+
+CRITICAL DOMAIN RULES:
+- ONLY use REAL domains from the email sample (e.g., github.com, amazon.de, paypal.com)
+- NEVER use placeholder domains: example.com, test.com, unsorted.com, random.com, dummy.com
+- NEVER use overly generic domains: email.com, mail.com, app.com, security.com, bank.com
+- Each "from:@domain" pattern must be an ACTUAL domain you see in the email sample
+- If you don't see enough emails from a domain, don't create a pattern for it
 
 Example output:
 ```json
@@ -517,15 +524,22 @@ HIERARCHICAL FOLDER STRUCTURE GUIDELINES:
 SIEVE FILTER PATTERN RULES (use multiple patterns per category):
    - "from:@domain.com" - sender domain (e.g., "from:@github.com")
    - "from:email@domain.com" - exact sender email
-   - "subject:keyword" - keyword in subject
-   - "subject:word1,word2,word3" - ANY of the words (OR logic)
+   - "subject:keyword" - single keyword in subject
+   - "subject:word1,word2,word3" - ANY of the words (OR logic - matches if subject contains word1 OR word2 OR word3)
    - "subject:word1 word2" - exact phrase matching
 
+CRITICAL DOMAIN RULES:
+   - ONLY use REAL domains from the cluster emails (e.g., github.com, amazon.de, paypal.com)
+   - NEVER use placeholder domains: example.com, test.com, unsorted.com, random.com, dummy.com
+   - NEVER use overly generic domains: email.com, mail.com, app.com, security.com, bank.com
+   - Each "from:@domain" pattern must be an ACTUAL domain you see in the cluster emails
+   - If you don't see a specific domain in the emails, don't create a pattern for it
+
 ADVANCED SIEVE CAPABILITIES:
-   - Combine FROM + SUBJECT for precision (e.g., from:@amazon.de AND subject:bestellt)
+   - Combine FROM + SUBJECT for precision (e.g., from:@amazon.de AND subject:bestellt,order)
    - Use domain matching for company emails
-   - Use multilingual keywords (e.g., "order,bestellung,bestelling,commande")
-   - Match notification patterns (e.g., "shipped,versendet,expédié,verzonden")
+   - Use multilingual keywords (e.g., "subject:order,bestellung,bestelling,commande")
+   - Match notification patterns (e.g., "subject:shipped,versendet,expédié,verzonden")
 
 CATEGORIZATION STRATEGY:
 1. Identify email types in each cluster:
