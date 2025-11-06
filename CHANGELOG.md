@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-01-07
+
+### Added
+- ✨ **Retroactive Filter Application** - Apply generated filters to existing emails in INBOX
+  - New script: `apply_filters_retroactive.py`
+  - Parses Sieve filter rules and applies via IMAP
+  - Safe dry-run mode shows changes before applying
+  - Interactive confirmation required
+  - Detailed statistics (processed, moved, errors)
+  - Accessible via `./mailcow-filter.sh apply-retroactive`
+
+### Improved
+- 📚 **Documentation Restructure**
+  - Renamed CLAUDE.md → ANTHROPIC.md (user API documentation)
+  - New CLAUDE.md (Claude Code project instructions)
+  - Optimized ANTHROPIC.md with Quick Start and TOC
+  - Added comparison tables for models and pricing
+  - Better section organization and navigation
+  - Clarified Sieve filter behavior (not retroactive by default)
+
+- 🛠️ **Enhanced User Experience**
+  - Updated README with retroactive filtering documentation
+  - Added FAQ entries about existing email organization
+  - Improved menu structure in `mailcow-filter.sh`
+  - Better documentation cross-references
+
+### Fixed
+- Clarified that standard Sieve filters don't work retroactively
+- Separated Claude Code instructions from user API documentation
+- Updated all documentation references
+
+### Performance
+- Retroactive application processes 1,500+ emails efficiently
+- Shows real-time progress during email processing
+
+---
+
 ## [1.0.0] - 2025-01-06
 
 ### Added
