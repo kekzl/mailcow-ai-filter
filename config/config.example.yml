@@ -1,0 +1,88 @@
+# Protocol selection: 'imap' (recommended) or 'activesync'
+protocol: "imap"
+
+# IMAP Configuration (recommended - fully supported)
+imap:
+  server: "mail.yourdomain.com"
+  username: "your-email@yourdomain.com"
+  password: "your-password"
+  use_ssl: true
+  port: 993  # 993 for SSL, 143 for non-SSL
+
+# ActiveSync Configuration (advanced - requires WBXML implementation)
+activesync:
+  server: "mail.yourdomain.com"
+  username: "your-email@yourdomain.com"
+  password: "your-password"
+  use_ssl: true
+  path: "/Microsoft-Server-ActiveSync"
+  device_id: "mailcow-ai-filter"
+  device_type: "SmartPhone"
+
+# AI Configuration
+ai:
+  # Provider: "anthropic" or "ollama"
+  provider: "ollama"
+
+  # For Anthropic Claude API
+  api_key: "your-anthropic-api-key"  # Not needed for Ollama
+  model: "claude-sonnet-4-5-20250929"  # Or local model name for Ollama
+
+  # For Ollama (local LLMs) - Recommended models:
+  # model: "qwen3:14b"       # Fast, high quality (RECOMMENDED)
+  # model: "llama3.1:70b"    # Larger model for 16GB+ VRAM
+  # model: "deepseek-r1:14b" # Alternative reasoning model
+  # model: "mistral:latest"  # Lighter option
+  base_url: "http://localhost:11434"  # Ollama server URL
+
+  # Two-Tier Hierarchical Mode (recommended for 100+ emails)
+  # Uses worker model to summarize each email, then master model for pattern analysis
+  use_hierarchical: true  # Enable two-tier architecture (default: true)
+
+  # Worker model: Fast model for email summarization
+  worker_model: "qwen3:4b"  # Recommended: qwen3:4b (256K context, fast)
+  # Alternative worker models:
+  # worker_model: "qwen3:0.6b"  # Fastest (523MB)
+  # worker_model: "qwen3:1.7b"  # Balanced (1.4GB)
+  # worker_model: "qwen3:8b"    # Slower but better quality (5.2GB)
+
+  # Master model: Better model for strategic pattern analysis
+  master_model: "qwen3:14b"  # Recommended: qwen3:14b for hierarchical folders
+  # If master_model not set, falls back to 'model' setting above
+
+  # Analysis settings
+  max_emails_to_analyze: 100
+  sample_from_folders: true  # Sample emails from different folders
+
+# Email Analysis
+analysis:
+  # Which folders to analyze (empty = all folders)
+  include_folders: []
+  # Folders to skip
+  exclude_folders:
+    - "Trash"
+    - "Spam"
+    - "Junk"
+
+  # Minimum emails in a category to generate a rule
+  min_category_size: 5
+
+  # Only analyze emails from last N months (default: 12)
+  months_back: 12
+
+# Sieve Rule Generation
+sieve:
+  # Output file for generated rules
+  output_file: "/app/output/generated.sieve"
+
+  # Rule preferences
+  create_folders: true  # Generate fileinto rules
+  mark_as_read: false   # Don't auto-mark as read
+
+  # Safety: require manual review before applying
+  require_review: true
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "/app/logs/ai-filter.log"

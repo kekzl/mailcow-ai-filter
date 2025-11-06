@@ -1,0 +1,25 @@
+# ActiveSync protocol (optional, not needed for IMAP)
+# py-eas-client is not available on PyPI
+# If you need ActiveSync, see LOCAL_MODELS.md for alternatives
+
+# HTTP and XML handling
+requests>=2.31.0
+lxml>=4.9.0
+python-dateutil>=2.8.0
+
+# AI integration
+anthropic>=0.25.0  # For Anthropic Claude API
+# For local LLMs via Ollama, requests is used (already included below)
+
+# Configuration and utilities
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Logging and monitoring
+colorlog>=6.7.0
+
+# Embedding and clustering (for embedding-based analysis mode)
+sentence-transformers>=2.5.0
+scikit-learn>=1.4.0
+hdbscan>=0.8.33
+numpy>=1.24.0

@@ -1,0 +1,15 @@
+services:
+  mailcow-ai-filter:
+    build: .
+    container_name: mailcow-ai-filter
+    volumes:
+      - ./config:/app/config:ro
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro  # Mount .env file
+    env_file:
+      - .env  # Load environment variables
+    environment:
+      - TZ=UTC
+    restart: "no"  # Batch job - run once and exit
+    network_mode: "host"  # Access host's Ollama server
