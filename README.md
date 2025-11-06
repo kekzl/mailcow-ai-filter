@@ -251,7 +251,7 @@ ai:
 
 **Get API key:** https://console.anthropic.com/
 
-See [CLAUDE.md](CLAUDE.md) for details.
+See [ANTHROPIC.md](ANTHROPIC.md) for details.
 
 ---
 
@@ -421,7 +421,7 @@ tail -f logs/ai-filter.log
 | [DOCKER_USAGE.md](DOCKER_USAGE.md) | Container usage guide |
 | [EXISTING_FILTERS.md](EXISTING_FILTERS.md) | Filter integration guide |
 | [LOCAL_MODELS.md](LOCAL_MODELS.md) | Local LLM setup & comparison |
-| [CLAUDE.md](CLAUDE.md) | Claude API setup & pricing |
+| [ANTHROPIC.md](ANTHROPIC.md) | Claude API setup & pricing |
 | [QUICKSTART.md](QUICKSTART.md) | 5-minute quick start |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture |
 

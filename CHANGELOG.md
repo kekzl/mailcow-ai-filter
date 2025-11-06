@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DOCKER_USAGE.md - Container guide
 - EXISTING_FILTERS.md - Filter integration
 - LOCAL_MODELS.md - Local LLM setup
-- CLAUDE.md - Claude API guide
+- ANTHROPIC.md - Claude API guide
 - ARCHITECTURE.md - Technical details
 
 ### Security
