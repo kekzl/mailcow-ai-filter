@@ -12,21 +12,40 @@
 
 This tool connects to your MailCow mailbox, analyzes your emails using AI, and automatically generates smart Sieve filtering rules to organize your inbox.
 
-**Before:**
+**Analysis Process:**
 ```
-📥 INBOX (1,569 emails - chaos!)
+📥 INBOX (1,569 emails analyzed)
+      ↓
+   AI Analysis (90 seconds)
+      ↓
+📝 Generated Filter Rules (16 categories)
 ```
 
-**After (90 seconds):**
+**What the filters do:**
+- ✅ **New incoming emails** - Automatically sorted into folders
+- ✅ **Future emails** - Continuously organized as they arrive
+- ❌ **Existing emails** - Sieve filters don't apply retroactively
+
+**Example categories generated:**
 ```
-📁 Shopping/Amazon-Orders (146 emails)
-📁 Finance/PayPal-Receipts (89 emails)
-📁 Work/GitHub-PRs (234 emails)
-📁 Social/LinkedIn-Updates (67 emails)
-... and 12 more organized folders!
+📁 Shopping/Amazon-Orders
+📁 Finance/PayPal-Receipts
+📁 Work/GitHub-PRs
+📁 Social/LinkedIn-Updates
+... and 12 more smart categories!
 ```
 
 **Zero manual configuration needed!** 🎉
+
+### What About Existing Emails?
+
+Sieve filters only apply to **new incoming emails**. To organize existing emails:
+
+1. **Use your email client** (Thunderbird, Webmail) to manually move emails
+2. **Apply filters retroactively** using Thunderbird's "Run Filters on Folder" feature
+3. **Use IMAP client** that supports filter application to existing messages
+
+The AI analysis uses your existing emails to learn patterns, but the generated filters only affect future emails.
 
 ---
 
@@ -431,6 +450,17 @@ The AI automatically detects and integrates with your existing filters! It won't
 ### Does this delete emails?
 
 **No!** It only creates folder organization rules. All emails are preserved.
+
+### Do the filters work on existing emails?
+
+**No**, Sieve filters only apply to **new incoming emails**. The tool analyzes your existing emails to learn patterns, but the generated filters only affect future emails.
+
+**To organize existing emails:**
+- Use Thunderbird's "Run Filters on Folder" feature
+- Manually move emails using your email client
+- Use an IMAP client that supports retroactive filter application
+
+**Why it works this way:** This is standard Sieve behavior - filters are processing rules for incoming mail, not reorganization tools.
 
 ---
 
