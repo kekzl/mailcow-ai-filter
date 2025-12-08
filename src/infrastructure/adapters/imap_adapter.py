@@ -60,7 +60,7 @@ class IMAPAdapter(IEmailFetcher):
             self.connection.login(self.username, self.password)
             logger.info(f"Connected to IMAP server {self.server}")
 
-        except Exception as e:
+        except (imaplib.IMAP4.error, OSError, TimeoutError) as e:
             logger.error(f"Failed to connect to IMAP server: {e}")
             raise ConnectionError(f"IMAP connection failed: {e}") from e
 
@@ -70,7 +70,7 @@ class IMAPAdapter(IEmailFetcher):
             try:
                 self.connection.logout()
                 logger.info("Disconnected from IMAP server")
-            except Exception as e:
+            except (imaplib.IMAP4.error, OSError) as e:
                 logger.warning(f"Error during disconnect: {e}")
             finally:
                 self.connection = None
@@ -144,7 +144,7 @@ class IMAPAdapter(IEmailFetcher):
             logger.info(f"Fetched {len(emails)} emails from {folder}")
             return emails
 
-        except Exception as e:
+        except (imaplib.IMAP4.error, OSError, TimeoutError) as e:
             logger.error(f"Error fetching emails from {folder}: {e}")
             raise
 
@@ -177,7 +177,7 @@ class IMAPAdapter(IEmailFetcher):
             logger.info(f"Found {len(folders)} folders")
             return folders
 
-        except Exception as e:
+        except (imaplib.IMAP4.error, OSError) as e:
             logger.error(f"Error listing folders: {e}")
             return []
 
@@ -199,7 +199,7 @@ class IMAPAdapter(IEmailFetcher):
                 count = int(messages[0].decode())
                 return count
             return 0
-        except Exception as e:
+        except (imaplib.IMAP4.error, OSError) as e:
             logger.error(f"Error getting folder count: {e}")
             return 0
 
@@ -229,7 +229,7 @@ class IMAPAdapter(IEmailFetcher):
             # Parse date
             try:
                 date = email.utils.parsedate_to_datetime(date_str)
-            except Exception:
+            except (TypeError, ValueError):
                 date = datetime.now()
 
             # Extract body
@@ -272,7 +272,7 @@ class IMAPAdapter(IEmailFetcher):
                 folder=folder_name,
             )
 
-        except Exception as e:
+        except (imaplib.IMAP4.error, OSError, ValueError, UnicodeDecodeError) as e:
             logger.warning(f"Error fetching email {msg_id}: {e}")
             return None
 
@@ -296,7 +296,7 @@ class IMAPAdapter(IEmailFetcher):
                 if encoding:
                     try:
                         result.append(part.decode(encoding))
-                    except Exception:
+                    except (UnicodeDecodeError, LookupError):
                         result.append(part.decode("utf-8", errors="ignore"))
                 else:
                     result.append(part.decode("utf-8", errors="ignore"))
@@ -305,7 +305,7 @@ class IMAPAdapter(IEmailFetcher):
 
         return " ".join(result)
 
-    def _extract_body(self, email_message) -> str:
+    def _extract_body(self, email_message: email.message.Message) -> str:
         """Extract body text from email message.
 
         Args:
@@ -325,14 +325,14 @@ class IMAPAdapter(IEmailFetcher):
                         if payload:
                             body = payload.decode("utf-8", errors="ignore")
                             break
-                    except Exception:
+                    except (UnicodeDecodeError, AttributeError):
                         continue
         else:
             try:
                 payload = email_message.get_payload(decode=True)
                 if payload:
                     body = payload.decode("utf-8", errors="ignore")
-            except Exception:
+            except (UnicodeDecodeError, AttributeError):
                 body = ""
 
         return body[:500]  # Limit body length

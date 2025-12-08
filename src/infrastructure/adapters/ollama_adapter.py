@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from typing import Any, Sequence
 
 import requests
@@ -61,7 +62,7 @@ class OllamaAdapter(ILLMService):
             if self.model not in model_names:
                 logger.warning(f"Model {self.model} not found. Available: {model_names}")
                 logger.info(f"Run: ollama pull {self.model}")
-        except Exception as e:
+        except (requests.RequestException, OSError) as e:
             logger.error(f"Failed to connect to Ollama at {self.base_url}: {e}")
             logger.info("Ensure Ollama is running: ollama serve")
 
@@ -101,7 +102,7 @@ class OllamaAdapter(ILLMService):
             logger.info(f"Ollama identified {len(result.get('categories', []))} categories")
             return result
 
-        except Exception as e:
+        except (requests.RequestException, json.JSONDecodeError, ValueError, OSError) as e:
             logger.error(f"Ollama analysis failed: {e}", exc_info=True)
             raise
 
@@ -149,7 +150,7 @@ class OllamaAdapter(ILLMService):
             logger.info(f"Master model identified {len(result.get('categories', []))} categories")
             return result
 
-        except Exception as e:
+        except (requests.RequestException, json.JSONDecodeError, ValueError, OSError) as e:
             logger.error(f"Master model analysis failed: {e}", exc_info=True)
             raise
 
@@ -196,7 +197,7 @@ class OllamaAdapter(ILLMService):
             logger.info(f"Master model identified {len(result.get('categories', []))} categories")
             return result
 
-        except Exception as e:
+        except (requests.RequestException, json.JSONDecodeError, ValueError, OSError) as e:
             logger.error(f"Cluster analysis failed: {e}", exc_info=True)
             raise
 
@@ -209,7 +210,7 @@ class OllamaAdapter(ILLMService):
         try:
             response = self.session.get(f"{self.base_url}/api/tags", timeout=5)
             return response.status_code == 200
-        except Exception:
+        except (requests.RequestException, OSError):
             return False
 
     def get_model_info(self) -> dict[str, str]:
@@ -230,7 +231,7 @@ class OllamaAdapter(ILLMService):
                             "size": model.get("size", "unknown"),
                             "modified": model.get("modified_at", "unknown"),
                         }
-        except Exception:
+        except (requests.RequestException, KeyError, OSError):
             pass
 
         return {
@@ -239,39 +240,61 @@ class OllamaAdapter(ILLMService):
             "status": "unknown",
         }
 
-    def _call_ollama(self, prompt: str) -> str:
-        """Call Ollama API.
+    def _call_ollama(
+        self, prompt: str, max_retries: int = 3, base_delay: float = 2.0
+    ) -> str:
+        """Call Ollama API with retry logic.
 
         Args:
             prompt: Analysis prompt
+            max_retries: Maximum number of retry attempts
+            base_delay: Base delay in seconds for exponential backoff
 
         Returns:
             Response text
 
         Raises:
-            TimeoutError: If request times out
-            Exception: If request fails
+            TimeoutError: If request times out after all retries
+            requests.RequestException: If request fails after all retries
         """
         logger.info(f"Calling Ollama with model {self.model}...")
 
-        response = self.session.post(
-            f"{self.base_url}/api/generate",
-            json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "temperature": self.temperature,
-                    "num_predict": self.num_predict,
-                    "top_p": self.top_p,
-                },
-            },
-            timeout=600,  # 10 minutes for local models
-        )
-        response.raise_for_status()
+        last_exception: Exception | None = None
 
-        result = response.json()
-        return result.get("response", "")
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.session.post(
+                    f"{self.base_url}/api/generate",
+                    json={
+                        "model": self.model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "options": {
+                            "temperature": self.temperature,
+                            "num_predict": self.num_predict,
+                            "top_p": self.top_p,
+                        },
+                    },
+                    timeout=600,  # 10 minutes for local models
+                )
+                response.raise_for_status()
+
+                result = response.json()
+                return result.get("response", "")
+
+            except (requests.RequestException, OSError, TimeoutError) as e:
+                last_exception = e
+                if attempt < max_retries:
+                    delay = base_delay * (2**attempt)
+                    logger.warning(
+                        f"Ollama request failed (attempt {attempt + 1}/{max_retries + 1}): {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(f"Ollama request failed after {max_retries + 1} attempts: {e}")
+
+        raise last_exception or RuntimeError("Ollama request failed")
 
     def _prepare_summary_sample(
         self, summaries: Sequence[EmailSummary], max_sample: int = 100
@@ -808,13 +831,13 @@ IMPORTANT:
                 json_str = json_match.group(1)
             else:
                 # Save full response for debugging
-                debug_file = "/app/output/failed_ai_response_full.txt"
+                debug_file = "/app/logs/failed_ai_response_full.txt"
                 try:
                     with open(debug_file, "w") as f:
                         f.write("=== FULL AI RESPONSE (No JSON Found) ===\n\n")
                         f.write(response_text)
                     logger.error(f"Saved full AI response to {debug_file}")
-                except Exception:
+                except (OSError, IOError):
                     pass
                 raise ValueError(f"No JSON found in response: {cleaned_text[:200]}")
 
@@ -891,13 +914,13 @@ IMPORTANT:
             pass
 
         # Strategy 5: Save failed response for debugging and raise error
-        debug_file = "/app/output/failed_ai_response.txt"
+        debug_file = "/app/logs/failed_ai_response.txt"
         try:
             with open(debug_file, "w") as f:
                 f.write("=== FAILED AI RESPONSE ===\n\n")
                 f.write(json_str)
             logger.error(f"Saved failed AI response to {debug_file}")
-        except Exception:
+        except (OSError, IOError):
             pass
 
         logger.error(

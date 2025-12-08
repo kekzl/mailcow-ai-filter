@@ -100,7 +100,7 @@ class RetroactiveFilterApplicator:
             try:
                 self.imap.close()
                 self.imap.logout()
-            except Exception:
+            except (imaplib.IMAP4.error, OSError):
                 pass
 
     def apply_filters(self, source_folder: str = "INBOX", dry_run: bool = False):
@@ -211,8 +211,8 @@ class RetroactiveFilterApplicator:
                 # Mark original as deleted
                 self.imap.store(email_id, "+FLAGS", "\\Deleted")
                 return True
-        except Exception as e:
-            print(f"    ❌ Error moving email: {e}")
+        except (imaplib.IMAP4.error, OSError) as e:
+            print(f"    Error moving email: {e}")
 
         return False
 
@@ -228,7 +228,7 @@ class RetroactiveFilterApplicator:
             if isinstance(part, bytes):
                 try:
                     result.append(part.decode(encoding or "utf-8", errors="ignore"))
-                except Exception:
+                except (UnicodeDecodeError, LookupError):
                     result.append(part.decode("utf-8", errors="ignore"))
             else:
                 result.append(str(part))
