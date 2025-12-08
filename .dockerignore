@@ -1,0 +1,71 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+.eggs
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Testing and coverage
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+
+# Type checking
+.mypy_cache
+
+# Output and logs (generated at runtime)
+output/
+logs/
+*.log
+
+# Local configuration (user secrets)
+config/config.yml
+.env
+.env.*
+
+# Documentation build
+docs/_build
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development files
+*.md
+!README.md
+Makefile
+docker-compose*.yml
