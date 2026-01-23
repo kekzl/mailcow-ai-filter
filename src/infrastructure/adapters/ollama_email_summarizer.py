@@ -93,7 +93,9 @@ class OllamaEmailSummarizer(IEmailSummarizer):
 
         with ThreadPoolExecutor(max_workers=max_parallel) as executor:
             # Submit all tasks
-            future_to_email = {executor.submit(self.summarize, email): email for email in emails}
+            future_to_email = {
+                executor.submit(self.summarize, email): email for email in emails
+            }
 
             # Collect results as they complete
             for future in as_completed(future_to_email):
@@ -102,11 +104,15 @@ class OllamaEmailSummarizer(IEmailSummarizer):
                     summary = future.result()
                     summaries.append(summary)
                 except Exception as e:
-                    logger.warning(f"Failed to summarize email '{email.subject[:50]}': {e}")
+                    logger.warning(
+                        f"Failed to summarize email '{email.subject[:50]}': {e}"
+                    )
                     # Create fallback summary
                     summaries.append(self._create_fallback_summary(email))
 
-        logger.info(f"Completed batch summarization: {len(summaries)}/{len(emails)} succeeded")
+        logger.info(
+            f"Completed batch summarization: {len(summaries)}/{len(emails)} succeeded"
+        )
         return summaries
 
     def _create_summarization_prompt(self, email: Email) -> str:
@@ -207,7 +213,9 @@ Your JSON output:"""
 
         # Extract JSON - try different patterns
         # 1. Try with code blocks
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL)
+        json_match = re.search(
+            r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL
+        )
         if json_match:
             json_str = json_match.group(1)
         # 2. Try finding first { to last }
@@ -226,11 +234,15 @@ Your JSON output:"""
             json_str = json_str.replace(""", "'").replace(""", "'")
 
             # Fix unquoted property names (e.g., {sender_type: "value"} → {"sender_type": "value"})
-            json_str = re.sub(r"([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)", r'\1"\2"\3', json_str)
+            json_str = re.sub(
+                r"([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)", r'\1"\2"\3', json_str
+            )
 
             # Fix unquoted string values after colons (e.g., "key": Value → "key": "Value")
             # Match: colon, optional space, unquoted word(s), then comma or closing brace
-            json_str = re.sub(r":\s*([A-Z][a-zA-Z0-9/\-\s]+)(?=\s*[,}])", r': "\1"', json_str)
+            json_str = re.sub(
+                r":\s*([A-Z][a-zA-Z0-9/\-\s]+)(?=\s*[,}])", r': "\1"', json_str
+            )
 
             # Fix unquoted array items (e.g., [item1, item2] → ["item1", "item2"])
             # Match items inside brackets that aren't already quoted
@@ -238,7 +250,11 @@ Your JSON output:"""
                 r"\[([^\]]+)\]",
                 lambda m: "["
                 + ", ".join(
-                    (f'"{item.strip()}"' if not item.strip().startswith('"') else item.strip())
+                    (
+                        f'"{item.strip()}"'
+                        if not item.strip().startswith('"')
+                        else item.strip()
+                    )
                     for item in m.group(1).split(",")
                 )
                 + "]",
@@ -292,7 +308,10 @@ Your JSON output:"""
             category = "CI/CD"
         elif any(word in subject_lower for word in ["order", "bestell", "confirmed"]):
             category = "Orders"
-        elif any(word in subject_lower for word in ["ship", "delivery", "versand", "zugestellt"]):
+        elif any(
+            word in subject_lower
+            for word in ["ship", "delivery", "versand", "zugestellt"]
+        ):
             category = "Shipping"
         elif any(word in subject_lower for word in ["birthday", "geburtstag"]):
             category = "Birthdays"
@@ -301,7 +320,8 @@ Your JSON output:"""
         elif any(word in subject_lower for word in ["finance", "stock", "aktien"]):
             category = "Finance"
         elif any(
-            word in subject_lower for word in ["offer", "sale", "discount", "deal", "promotion"]
+            word in subject_lower
+            for word in ["offer", "sale", "discount", "deal", "promotion"]
         ):
             category = "Promotions"
         elif any(word in sender_domain for word in ["newsletter", "news", "marketing"]):

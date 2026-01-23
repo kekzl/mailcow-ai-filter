@@ -76,7 +76,9 @@ class PatternDetector:
 
         return valid_patterns
 
-    def _detect_sender_domain_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
+    def _detect_sender_domain_patterns(
+        self, emails: Sequence[Email]
+    ) -> list[DetectedPattern]:
         """Detect patterns based on sender domains.
 
         Args:
@@ -115,7 +117,9 @@ class PatternDetector:
 
         return patterns
 
-    def _detect_subject_keyword_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
+    def _detect_subject_keyword_patterns(
+        self, emails: Sequence[Email]
+    ) -> list[DetectedPattern]:
         """Detect patterns based on subject keywords.
 
         Args:
@@ -124,7 +128,9 @@ class PatternDetector:
         Returns:
             List of keyword-based patterns
         """
-        keyword_data: dict[str, dict] = defaultdict(lambda: {"count": 0, "subjects": []})
+        keyword_data: dict[str, dict] = defaultdict(
+            lambda: {"count": 0, "subjects": []}
+        )
 
         # Common words to ignore
         stop_words = {
@@ -194,7 +200,9 @@ class PatternDetector:
 
         return patterns
 
-    def _detect_sender_address_patterns(self, emails: Sequence[Email]) -> list[DetectedPattern]:
+    def _detect_sender_address_patterns(
+        self, emails: Sequence[Email]
+    ) -> list[DetectedPattern]:
         """Detect patterns based on specific sender addresses.
 
         Args:
@@ -275,7 +283,9 @@ class PatternDetector:
         folder_counts: dict[str, int] = Counter(email.folder for email in emails)
         return dict(folder_counts)
 
-    def suggest_folder_for_pattern(self, emails: Sequence[Email], pattern: DetectedPattern) -> str:
+    def suggest_folder_for_pattern(
+        self, emails: Sequence[Email], pattern: DetectedPattern
+    ) -> str:
         """Suggest a folder name based on pattern and email distribution.
 
         Args:

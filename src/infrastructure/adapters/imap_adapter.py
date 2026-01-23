@@ -165,7 +165,9 @@ class IMAPAdapter(IEmailFetcher):
             folders = []
             for folder_data in folder_list:
                 folder_str = (
-                    folder_data.decode() if isinstance(folder_data, bytes) else folder_data
+                    folder_data.decode()
+                    if isinstance(folder_data, bytes)
+                    else folder_data
                 )
                 parts = folder_str.split('"')
 
@@ -256,7 +258,9 @@ class IMAPAdapter(IEmailFetcher):
                 recipient_list = [r.strip() for r in to_header.split(",")]
                 for recipient in recipient_list:
                     if "<" in recipient and ">" in recipient:
-                        recipient_addr = recipient[recipient.find("<") + 1 : recipient.find(">")]
+                        recipient_addr = recipient[
+                            recipient.find("<") + 1 : recipient.find(">")
+                        ]
                     else:
                         recipient_addr = recipient
                     if recipient_addr:

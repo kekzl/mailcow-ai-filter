@@ -44,7 +44,9 @@ def extract_folders_from_sieve(sieve_file: str) -> list[str]:
     return sorted(folders)
 
 
-def connect_imap(server: str, username: str, password: str, use_ssl: bool = True, port: int = 993):
+def connect_imap(
+    server: str, username: str, password: str, use_ssl: bool = True, port: int = 993
+):
     """Connect to IMAP server.
 
     Args:
@@ -87,7 +89,9 @@ def get_existing_folders(conn) -> set[str]:
 
         folders = set()
         for folder_data in folder_list:
-            folder_str = folder_data.decode() if isinstance(folder_data, bytes) else folder_data
+            folder_str = (
+                folder_data.decode() if isinstance(folder_data, bytes) else folder_data
+            )
             parts = folder_str.split('"')
 
             if len(parts) >= 3:
@@ -225,7 +229,10 @@ def main():
 
                 # Create remaining folders automatically
                 for remaining_folder in folders_to_create:
-                    if remaining_folder not in existing_folders and remaining_folder != folder:
+                    if (
+                        remaining_folder not in existing_folders
+                        and remaining_folder != folder
+                    ):
                         if create_folder(conn, remaining_folder):
                             print(f"  ✅ Created '{remaining_folder}'")
                             created += 1

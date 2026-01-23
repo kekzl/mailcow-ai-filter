@@ -14,9 +14,7 @@ class EmailSummary:
 
     email_id: str
     sender_domain: str
-    category: (
-        str  # Dynamic category determined by worker model (e.g., "CI/CD", "Orders", "Birthdays")
-    )
+    category: str  # Dynamic category determined by worker model (e.g., "CI/CD", "Orders", "Birthdays")
     topic: str  # Brief topic description
     keywords: tuple[str, ...]  # Key terms from subject/body
     folder: str

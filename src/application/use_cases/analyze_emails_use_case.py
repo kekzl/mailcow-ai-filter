@@ -194,7 +194,9 @@ class AnalyzeEmailsUseCase:
 
             # Step 3: Generate filter from AI analysis
             logger.info("Generating Sieve filter from patterns...")
-            sieve_filter = self.filter_generator.generate_filter_from_raw_response(ai_response)
+            sieve_filter = self.filter_generator.generate_filter_from_raw_response(
+                ai_response
+            )
 
             logger.info(f"Generated filter with {len(sieve_filter.rules)} rules")
 
@@ -203,7 +205,9 @@ class AnalyzeEmailsUseCase:
             validation_issues = self.filter_validator.validate_filter(sieve_filter)
 
             if validation_issues:
-                validation_report = self.filter_validator.format_issues_report(validation_issues)
+                validation_report = self.filter_validator.format_issues_report(
+                    validation_issues
+                )
                 logger.warning(f"Filter validation found issues:\n{validation_report}")
 
                 # Count errors vs warnings
@@ -298,7 +302,9 @@ class AnalyzeEmailsUseCase:
 
                 if active_script:
                     # Extract and summarize filters
-                    filters = SieveFilterExtractor.extract_existing_filters(active_script)
+                    filters = SieveFilterExtractor.extract_existing_filters(
+                        active_script
+                    )
                     summary = SieveFilterExtractor.summarize_existing_filters(filters)
                     return summary
 

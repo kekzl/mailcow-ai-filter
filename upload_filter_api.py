@@ -69,7 +69,9 @@ def upload_filter(
 
     try:
         print(f"📡 Uploading filter to {mailcow_url}...")
-        response = requests.post(url, headers=headers, json=payload, verify=verify_ssl, timeout=30)
+        response = requests.post(
+            url, headers=headers, json=payload, verify=verify_ssl, timeout=30
+        )
 
         if response.status_code == 200:
             result = response.json()
@@ -77,7 +79,9 @@ def upload_filter(
                 # MailCow API typically returns array with result objects
                 first_result = result[0]
                 if first_result.get("type") == "success":
-                    print(f"✅ {first_result.get('msg', 'Filter uploaded successfully!')}")
+                    print(
+                        f"✅ {first_result.get('msg', 'Filter uploaded successfully!')}"
+                    )
                     return True
                 else:
                     print(f"❌ Error: {first_result.get('msg', 'Unknown error')}")
@@ -105,14 +109,18 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Upload Sieve filter to MailCow via API")
+    parser = argparse.ArgumentParser(
+        description="Upload Sieve filter to MailCow via API"
+    )
     parser.add_argument(
         "--mailcow-url",
         help="MailCow URL (e.g., https://mail.example.com)",
         default=None,
     )
     parser.add_argument("--api-key", help="MailCow API key", default=None)
-    parser.add_argument("--username", help="Email address/mailbox username", default=None)
+    parser.add_argument(
+        "--username", help="Email address/mailbox username", default=None
+    )
     parser.add_argument(
         "--sieve-file",
         help="Path to Sieve filter file",

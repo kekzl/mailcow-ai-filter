@@ -63,12 +63,16 @@ class SieveFilterParser:
         # Pattern: header :contains "subject" "keyword"
         subject_pattern = r'header\s+:contains\s+"subject"\s+"([^"]+)"'
         for match in re.finditer(subject_pattern, conditions_block):
-            conditions.append({"type": "subject_contains", "value": match.group(1).lower()})
+            conditions.append(
+                {"type": "subject_contains", "value": match.group(1).lower()}
+            )
 
         # Pattern: header :contains "from" "sender"
         from_pattern = r'header\s+:contains\s+"from"\s+"([^"]+)"'
         for match in re.finditer(from_pattern, conditions_block):
-            conditions.append({"type": "from_contains", "value": match.group(1).lower()})
+            conditions.append(
+                {"type": "from_contains", "value": match.group(1).lower()}
+            )
 
         return conditions
 
@@ -312,11 +316,13 @@ def main():
         sys.exit(1)
 
     # Ask if they want to proceed with actual move
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("💡 Dry run complete. No emails were actually moved.")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
-    response = input("\n   Proceed with ACTUAL email moving? (yes/no): ").strip().lower()
+    response = (
+        input("\n   Proceed with ACTUAL email moving? (yes/no): ").strip().lower()
+    )
 
     if response != "yes":
         print("❌ Cancelled. No emails were moved.")

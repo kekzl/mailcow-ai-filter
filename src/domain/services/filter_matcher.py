@@ -42,7 +42,9 @@ class FilterMatcher:
     - Generate test reports
     """
 
-    def test_filter(self, sieve_filter: SieveFilter, emails: Sequence[Email]) -> FilterTestResult:
+    def test_filter(
+        self, sieve_filter: SieveFilter, emails: Sequence[Email]
+    ) -> FilterTestResult:
         """Test a complete filter against email collection.
 
         Args:

@@ -192,7 +192,9 @@ class FilterCondition:
     def to_sieve(self) -> str:
         """Convert condition to Sieve script syntax."""
         if self.condition_type == ConditionType.ADDRESS_DOMAIN:
-            return f'address :domain {self.match_type.value} "{self.field}" "{self.value}"'
+            return (
+                f'address :domain {self.match_type.value} "{self.field}" "{self.value}"'
+            )
         elif self.condition_type == ConditionType.HEADER_CONTAINS:
             return f'header {self.match_type.value} "{self.field}" "{self.value}"'
         elif self.condition_type == ConditionType.HEADER_IS:

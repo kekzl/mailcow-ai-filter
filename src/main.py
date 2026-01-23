@@ -31,7 +31,9 @@ def main():
 
     # Setup logging
     log_config = config_dict.get("logging", {})
-    setup_logging(level=log_config.get("level", "INFO"), log_file=log_config.get("file"))
+    setup_logging(
+        level=log_config.get("level", "INFO"), log_file=log_config.get("file")
+    )
 
     logger.info("Starting MailCow AI Filter (Hexagonal Architecture)")
 

@@ -45,7 +45,9 @@ class FilterGenerator:
         """
         self.min_confidence = min_confidence
 
-    def generate_filter_from_categories(self, categories: list[CategoryPattern]) -> SieveFilter:
+    def generate_filter_from_categories(
+        self, categories: list[CategoryPattern]
+    ) -> SieveFilter:
         """Generate a complete Sieve filter from AI-detected categories.
 
         Args:
@@ -61,7 +63,9 @@ class FilterGenerator:
             raise ValueError("No categories provided for filter generation")
 
         # Filter by confidence threshold
-        valid_categories = [cat for cat in categories if cat.confidence >= self.min_confidence]
+        valid_categories = [
+            cat for cat in categories if cat.confidence >= self.min_confidence
+        ]
 
         if not valid_categories:
             raise ValueError(
@@ -81,7 +85,11 @@ class FilterGenerator:
             # Process subcategories recursively (also sorted by priority)
             if category.subcategories:
                 sorted_subcats = sorted(
-                    [sc for sc in category.subcategories if sc.confidence >= self.min_confidence],
+                    [
+                        sc
+                        for sc in category.subcategories
+                        if sc.confidence >= self.min_confidence
+                    ],
                     key=self._get_category_priority,
                 )
                 for subcat in sorted_subcats:
@@ -201,7 +209,9 @@ class FilterGenerator:
         # Others (lowest priority)
         return 60
 
-    def _create_rule_from_category(self, category: CategoryPattern) -> FilterRule | None:
+    def _create_rule_from_category(
+        self, category: CategoryPattern
+    ) -> FilterRule | None:
         """Create a single filter rule from a category pattern.
 
         Args:
@@ -246,7 +256,9 @@ class FilterGenerator:
             logical_operator=logical_operator,
         )
 
-    def generate_filter_from_raw_response(self, ai_response: dict[str, Any]) -> SieveFilter:
+    def generate_filter_from_raw_response(
+        self, ai_response: dict[str, Any]
+    ) -> SieveFilter:
         """Generate filter from raw AI JSON response.
 
         Args:
@@ -295,7 +307,9 @@ class FilterGenerator:
             name=cat_dict.get("name", "Unknown"),
             description=cat_dict.get("description", ""),
             patterns=cat_dict.get("patterns", []),
-            suggested_folder=cat_dict.get("suggested_folder", cat_dict.get("name", "Unknown")),
+            suggested_folder=cat_dict.get(
+                "suggested_folder", cat_dict.get("name", "Unknown")
+            ),
             confidence=cat_dict.get("confidence", 0.5),
             example_subjects=cat_dict.get("example_subjects", []),
             subcategories=subcategories if subcategories else None,

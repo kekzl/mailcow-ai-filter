@@ -143,9 +143,9 @@ class SieveFilter:
 
         for i, rule in enumerate(self.rules):
             if not rule.conditions:
-                errors.append(f"Rule {i+1} has no conditions")
+                errors.append(f"Rule {i + 1} has no conditions")
             if not rule.actions:
-                errors.append(f"Rule {i+1} has no actions")
+                errors.append(f"Rule {i + 1} has no actions")
 
         return len(errors) == 0, errors
 

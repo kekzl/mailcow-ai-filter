@@ -70,7 +70,9 @@ class Container:
         """
         if self._llm_service is None:
             ai_config = self.config.get("ai", {})
-            master_model = ai_config.get("master_model") or ai_config.get("model", "qwen3:14b")
+            master_model = ai_config.get("master_model") or ai_config.get(
+                "model", "qwen3:14b"
+            )
 
             # Read AI generation settings
             temperature = ai_config.get("temperature", 0.7)
@@ -162,7 +164,9 @@ class Container:
             min_cluster_size = clustering_config.get("min_cluster_size", 5)
             min_samples = clustering_config.get("min_samples", 2)
             handle_outliers = clustering_config.get("handle_outliers", True)
-            outlier_min_cluster_size = clustering_config.get("outlier_min_cluster_size", 3)
+            outlier_min_cluster_size = clustering_config.get(
+                "outlier_min_cluster_size", 3
+            )
 
             self._clustering_service = HDBSCANClusteringAdapter(
                 min_cluster_size=min_cluster_size,

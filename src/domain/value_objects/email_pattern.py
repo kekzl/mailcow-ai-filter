@@ -39,7 +39,9 @@ class EmailPattern:
         )
 
     @classmethod
-    def from_subject_keyword(cls, keyword: str, confidence: float, sample_count: int = 0) -> Self:
+    def from_subject_keyword(
+        cls, keyword: str, confidence: float, sample_count: int = 0
+    ) -> Self:
         """Factory method to create subject keyword pattern."""
         return cls(
             pattern_type="subject",

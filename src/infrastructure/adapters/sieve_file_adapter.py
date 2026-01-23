@@ -21,7 +21,9 @@ class SieveFileAdapter(IFilterRepository):
             default_output_dir: Default directory for saving filters
         """
         self.default_output_dir = default_output_dir
-        logger.info(f"Initialized Sieve file adapter (output_dir: {default_output_dir})")
+        logger.info(
+            f"Initialized Sieve file adapter (output_dir: {default_output_dir})"
+        )
 
     def save(self, sieve_filter: SieveFilter, output_path: str) -> str:
         """Save filter to Sieve file.

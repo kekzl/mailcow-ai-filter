@@ -86,7 +86,9 @@ class ILLMService(ABC):
             Dictionary containing hierarchical categories
         """
         # Default implementation for adapters that don't override
-        return self.analyze_emails(emails=[], max_sample=max_sample)  # Not used in this mode
+        return self.analyze_emails(
+            emails=[], max_sample=max_sample
+        )  # Not used in this mode
 
     def analyze_clusters(
         self,
@@ -106,5 +108,6 @@ class ILLMService(ABC):
         """
         # Default implementation for adapters that don't override
         return self.analyze_emails(
-            emails=[], max_sample=max_representatives  # Not used in this mode
+            emails=[],
+            max_sample=max_representatives,  # Not used in this mode
         )

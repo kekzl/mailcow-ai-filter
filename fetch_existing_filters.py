@@ -100,7 +100,9 @@ def fetch_via_imap_metadata(
         # Try to get metadata about filters
         # Note: This is limited and server-dependent
         try:
-            status, data = conn.getmetadata('""', "/private/vendor/vendor.dovecot/sieve")
+            status, data = conn.getmetadata(
+                '""', "/private/vendor/vendor.dovecot/sieve"
+            )
             if status == "OK":
                 print("📋 Found Sieve metadata:")
                 print(data)
@@ -139,7 +141,11 @@ def parse_sieve_rules(script_content: str):
         # Extract comments
         if stripped.startswith("#"):
             comment = stripped[1:].strip()
-            if comment and not comment.startswith("=") and not comment.startswith("Rule:"):
+            if (
+                comment
+                and not comment.startswith("=")
+                and not comment.startswith("Rule:")
+            ):
                 if "Description:" in comment:
                     current_description = comment.split("Description:")[1].strip()
                 elif "Rule:" in comment:
@@ -172,12 +178,18 @@ def parse_sieve_rules(script_content: str):
                 # Extract conditions
                 conditions = []
                 if "address :domain :is" in rule_text:
-                    domain_matches = re.findall(r'address :domain :is "from" "([^"]+)"', rule_text)
+                    domain_matches = re.findall(
+                        r'address :domain :is "from" "([^"]+)"', rule_text
+                    )
                     conditions.extend([f"from:{domain}" for domain in domain_matches])
 
                 if "header :contains" in rule_text:
-                    header_matches = re.findall(r'header :contains "([^"]+)" "([^"]+)"', rule_text)
-                    conditions.extend([f"{header}:{value}" for header, value in header_matches])
+                    header_matches = re.findall(
+                        r'header :contains "([^"]+)" "([^"]+)"', rule_text
+                    )
+                    conditions.extend(
+                        [f"{header}:{value}" for header, value in header_matches]
+                    )
 
                 rules.append(
                     {
@@ -195,7 +207,9 @@ def parse_sieve_rules(script_content: str):
     return rules
 
 
-def save_existing_filters(scripts: dict, output_file: str = "output/existing_filters.txt"):
+def save_existing_filters(
+    scripts: dict, output_file: str = "output/existing_filters.txt"
+):
     """Save existing filters to file for AI analysis.
 
     Args:
@@ -227,7 +241,7 @@ def save_existing_filters(scripts: dict, output_file: str = "output/existing_fil
                     f.write(f"{i}. {rule['description']}\n")
                     f.write(f"   → Folder: {rule['folder']}\n")
                     if rule["conditions"]:
-                        f.write(f"   → Conditions:\n")
+                        f.write("   → Conditions:\n")
                         for cond in rule["conditions"]:
                             f.write(f"      - {cond}\n")
                     f.write("\n")
@@ -290,7 +304,9 @@ def main():
         print()
         print("Next steps:")
         print("1. Review output/existing_filters.txt")
-        print("2. Re-run the email analysis - it will now consider your existing filters")
+        print(
+            "2. Re-run the email analysis - it will now consider your existing filters"
+        )
         print("3. New filters will complement (not duplicate) existing ones")
 
     else:

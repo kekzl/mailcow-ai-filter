@@ -294,7 +294,9 @@ class FilterValidator:
                 report.append("")
 
         report.append("=" * 60)
-        report.append(f"Total: {len(errors)} errors, {len(warnings)} warnings, {len(infos)} info")
+        report.append(
+            f"Total: {len(errors)} errors, {len(warnings)} warnings, {len(infos)} info"
+        )
         report.append("=" * 60)
 
         return "\n".join(report)

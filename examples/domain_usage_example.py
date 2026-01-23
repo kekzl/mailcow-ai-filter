@@ -25,13 +25,15 @@ def example_create_email():
         subject="Important: Q4 Budget Review",
         body="Please review the attached Q4 budget document...",
         folder="INBOX",
-        received_at=datetime.now()
+        received_at=datetime.now(),
     )
 
     print(f"Email created: {email}")
     print(f"Sender domain: {email.sender.domain}")
     print(f"Is from example.com: {email.is_from_domain('example.com')}")
-    print(f"Contains 'budget' in subject: {email.contains_keyword_in_subject('budget')}")
+    print(
+        f"Contains 'budget' in subject: {email.contains_keyword_in_subject('budget')}"
+    )
     print()
 
 
@@ -99,10 +101,7 @@ def example_create_complete_filter():
     ]
 
     # Create actions
-    shopping_actions = [
-        FilterAction.fileinto("Shopping"),
-        FilterAction.stop()
-    ]
+    shopping_actions = [FilterAction.fileinto("Shopping"), FilterAction.stop()]
 
     # Create rule
     shopping_rule = FilterRule.create(
@@ -110,7 +109,7 @@ def example_create_complete_filter():
         actions=shopping_actions,
         logical_operator="anyof",
         name="Shopping",
-        description="Online shopping orders and shipping notifications"
+        description="Online shopping orders and shipping notifications",
     )
 
     # Create another rule for work emails
@@ -119,24 +118,21 @@ def example_create_complete_filter():
         FilterCondition.header_contains("subject", "meeting"),
     ]
 
-    work_actions = [
-        FilterAction.fileinto("Work"),
-        FilterAction.stop()
-    ]
+    work_actions = [FilterAction.fileinto("Work"), FilterAction.stop()]
 
     work_rule = FilterRule.create(
         conditions=work_conditions,
         actions=work_actions,
         logical_operator="anyof",
         name="Work",
-        description="Work-related emails"
+        description="Work-related emails",
     )
 
     # Create Sieve filter with both rules
     sieve_filter = SieveFilter.create(
         name="Email Organization",
         description="Automatically organize incoming emails",
-        rules=[shopping_rule, work_rule]
+        rules=[shopping_rule, work_rule],
     )
 
     # Validate
@@ -162,7 +158,9 @@ def example_email_pattern_matching():
 
     # Create patterns (as would be detected by AI)
     pattern1 = EmailPattern.from_domain("amazon.com", confidence=0.95, sample_count=25)
-    pattern2 = EmailPattern.from_subject_keyword("invoice", confidence=0.88, sample_count=18)
+    pattern2 = EmailPattern.from_subject_keyword(
+        "invoice", confidence=0.88, sample_count=18
+    )
 
     print(f"Pattern 1: {pattern1}")
     print(f"  Filter string: {pattern1.to_filter_string()}")
@@ -180,7 +178,7 @@ def example_email_pattern_matching():
         recipients=["user@example.com"],
         subject="Your Amazon Order Has Shipped",
         body="Your order #12345 has been shipped",
-        folder="INBOX"
+        folder="INBOX",
     )
 
     print(f"Email: {email}")

@@ -59,7 +59,9 @@ class OllamaAdapter(ILLMService):
             model_names = [m["name"] for m in models]
 
             if self.model not in model_names:
-                logger.warning(f"Model {self.model} not found. Available: {model_names}")
+                logger.warning(
+                    f"Model {self.model} not found. Available: {model_names}"
+                )
                 logger.info(f"Run: ollama pull {self.model}")
         except Exception as e:
             logger.error(f"Failed to connect to Ollama at {self.base_url}: {e}")
@@ -98,7 +100,9 @@ class OllamaAdapter(ILLMService):
             # Parse response
             result = self._parse_response(response_text)
 
-            logger.info(f"Ollama identified {len(result.get('categories', []))} categories")
+            logger.info(
+                f"Ollama identified {len(result.get('categories', []))} categories"
+            )
             return result
 
         except Exception as e:
@@ -146,7 +150,9 @@ class OllamaAdapter(ILLMService):
             # Parse response
             result = self._parse_response(response_text)
 
-            logger.info(f"Master model identified {len(result.get('categories', []))} categories")
+            logger.info(
+                f"Master model identified {len(result.get('categories', []))} categories"
+            )
             return result
 
         except Exception as e:
@@ -193,7 +199,9 @@ class OllamaAdapter(ILLMService):
             # Parse response
             result = self._parse_response(response_text)
 
-            logger.info(f"Master model identified {len(result.get('categories', []))} categories")
+            logger.info(
+                f"Master model identified {len(result.get('categories', []))} categories"
+            )
             return result
 
         except Exception as e:
@@ -337,10 +345,10 @@ Here's a summary of the emails:
         for i, summary in enumerate(summary_sample, 1):
             prompt += f"""
 Email {i}:
-- Domain: {summary['sender_domain']}
-- Category: {summary['category']}
-- Topic: {summary['topic']}
-- Keywords: {', '.join(summary['keywords'])}
+- Domain: {summary["sender_domain"]}
+- Category: {summary["category"]}
+- Topic: {summary["topic"]}
+- Keywords: {", ".join(summary["keywords"])}
 """
 
         prompt += """
@@ -500,7 +508,9 @@ Cluster {i} ({cluster.size} emails):
             for j, email in enumerate(representatives, 1):
                 # Extract domain from email sender
                 sender_domain = (
-                    email.sender.value.split("@")[-1] if "@" in email.sender.value else "unknown"
+                    email.sender.value.split("@")[-1]
+                    if "@" in email.sender.value
+                    else "unknown"
                 )
                 prompt += f"""  Email {j}:
   - From: {sender_domain}
@@ -525,7 +535,8 @@ CRITICAL REQUIREMENTS - YOU MUST FOLLOW THESE EXACTLY:
 6. Group related subcategories under parent categories
    (e.g., "Work/GitHub", "Work/GitLab", "Shopping/Amazon-Orders", "Shopping/Amazon-Shipping")
 
-IMPORTANT: If you create fewer than {max(10, min(len(clusters)//2, 25))} subcategories, your response will be REJECTED.
+IMPORTANT: If you create fewer than {max(10, min(len(clusters) // 2, 25))} subcategories,
+your response will be REJECTED.
 
 HIERARCHICAL FOLDER STRUCTURE GUIDELINES:
 - Use slash (/) to separate parent/child folders: "Parent/Child"
@@ -726,10 +737,10 @@ Here's a sample of {len(email_sample)} emails:
         for i, email in enumerate(email_sample, 1):
             prompt += f"""
 Email {i}:
-- From: {email['from']}
-- Subject: {email['subject']}
-- Current folder: {email['folder']}
-- Preview: {email['body_preview']}
+- From: {email["from"]}
+- Subject: {email["subject"]}
+- Current folder: {email["folder"]}
+- Preview: {email["body_preview"]}
 """
 
         prompt += """
@@ -798,7 +809,9 @@ IMPORTANT:
                 cleaned_text = after_think[-1]  # Get everything after last </think>
 
         # Extract JSON from response
-        json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL)
+        json_match = re.search(
+            r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, re.DOTALL
+        )
         if json_match:
             json_str = json_match.group(1)
         else:
@@ -858,8 +871,12 @@ IMPORTANT:
 
         # Strategy 2: Fix trailing commas
         try:
-            fixed_json = re.sub(r",\s*}", "}", json_str)  # Remove trailing commas before }
-            fixed_json = re.sub(r",\s*]", "]", fixed_json)  # Remove trailing commas before ]
+            fixed_json = re.sub(
+                r",\s*}", "}", json_str
+            )  # Remove trailing commas before }
+            fixed_json = re.sub(
+                r",\s*]", "]", fixed_json
+            )  # Remove trailing commas before ]
             result = json.loads(fixed_json)
             logger.info("Successfully parsed JSON after fixing trailing commas")
             return result
@@ -868,8 +885,12 @@ IMPORTANT:
 
         # Strategy 3: Fix missing commas between array elements
         try:
-            fixed_json = re.sub(r"\}\s*\{", "},{", json_str)  # Add comma between objects
-            fixed_json = re.sub(r'"\s*"', '","', fixed_json)  # Add comma between strings
+            fixed_json = re.sub(
+                r"\}\s*\{", "},{", json_str
+            )  # Add comma between objects
+            fixed_json = re.sub(
+                r'"\s*"', '","', fixed_json
+            )  # Add comma between strings
             result = json.loads(fixed_json)
             logger.info("Successfully parsed JSON after fixing missing commas")
             return result
@@ -878,7 +899,9 @@ IMPORTANT:
 
         # Strategy 4: Try to extract just the categories array
         try:
-            categories_match = re.search(r'"categories"\s*:\s*\[(.*?)\]', json_str, re.DOTALL)
+            categories_match = re.search(
+                r'"categories"\s*:\s*\[(.*?)\]', json_str, re.DOTALL
+            )
             if categories_match:
                 categories_str = "[" + categories_match.group(1) + "]"
                 # Try to fix and parse categories array
